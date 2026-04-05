@@ -1,31 +1,60 @@
-// server.js
 const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-
 const app = express();
 
-// Middleware
-app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB (replace <your_mongo_uri> with your connection string)
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/myapp', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.error('MongoDB connection error:', err));
+let users = {};
 
-// Routes
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/users', userRoutes);
+app.post('/login', (req, res) => {
+  const { username, ref } = req.body;
 
-// Test route
-app.get('/', (req, res) => {
-  res.send('Backend is running on Render!');
+  if (!users[username]) {
+    users[username] = { coins: 0, referrals: 0, lastClaim: 0 };
+
+    if (ref && users[ref]) {
+      users[ref].coins += 50;
+      users[ref].referrals += 1;
+    }
+  }
+
+  res.json(users[username]);
 });
 
-// Listen on Render's port
+app.post('/add', (req, res) => {
+  const { username, coins } = req.body;
+  if (users[username]) users[username].coins += coins;
+  res.json(users[username]);
+});
+
+app.post('/daily', (req, res) => {
+  const { username } = req.body;
+  const now = Date.now();
+
+  if (users[username]) {
+    if (now - users[username].lastClaim > 86400000) {
+      users[username].coins += 100;
+      users[username].lastClaim = now;
+      return res.json({ message: "Daily claimed", user: users[username] });
+    } else {
+      return res.json({ message: "Already claimed" });
+    }
+  }
+});
+
+app.post('/withdraw', (req, res) => {
+  const { username, amount } = req.body;
+
+  if (!users[username]) return res.json({ error: "User not found" });
+  if (users[username].coins < amount) return res.json({ error: "Not enough coins" });
+  if (users[username].referrals < 5) return res.json({ error: "Need 5 referrals" });
+
+  users[username].coins -= amount;
+  res.json({ message: "Withdraw successful" });
+});
+
+app.get('/user/:username', (req, res) => {
+  res.json(users[req.params.username] || { coins: 0 });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); 
+app.listen(PORT, () => console.log("Server running"));
