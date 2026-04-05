@@ -1,71 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tap Crypto Final</title>
+<title>Earn App Ultra</title>
+
 <style>
-body { margin:0; background:#0f0f0f; color:white; text-align:center; font-family:sans-serif; }
-.screen { display:none; padding:20px; }
-.active { display:block; }
-.nav { position:fixed; bottom:0; width:100%; background:#111; display:flex; justify-content:space-around; padding:10px 0; }
-button { padding:10px; margin:5px; border:none; border-radius:10px; background:#00ffcc; color:black; cursor:pointer; }
-input { padding:10px; margin:5px; border-radius:5px; border:none; width:200px; }
-.tap { width:120px; height:120px; background:gold; border-radius:50%; margin:auto; font-size:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+body{margin:0;background:#0f0f0f;color:white;text-align:center;font-family:sans-serif;}
+.screen{display:none;padding:20px;}
+.active{display:block;}
+.nav{position:fixed;bottom:0;width:100%;background:#111;}
+button{padding:10px;margin:5px;border:none;border-radius:10px;background:#00ffcc;color:black;}
+input{padding:10px;margin:5px;border-radius:5px;border:none;}
+.tap{width:130px;height:130px;background:gold;border-radius:50%;margin:auto;font-size:30px;display:flex;align-items:center;justify-content:center;}
 </style>
+
 </head>
 <body>
 
-<!-- SUBSCRIBE SCREEN -->
-<div id="sub" class="screen active">
-<h2>Subscribe First</h2>
+<!-- LOCK -->
+<div id="lock" class="screen active">
+<h2>🔒 Subscribe to Enter</h2>
 <a href="https://www.youtube.com/@Mamme234" target="_blank">
 <button>Subscribe YouTube</button>
-</a><br>
-<button onclick="unlock()">I Subscribed</button>
+</a>
+<br>
+<button onclick="unlock()">Unlock</button>
 </div>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="login" class="screen">
-<h2>Enter Username</h2>
+<h2>Login</h2>
 <input id="username" placeholder="Username"><br>
 <button onclick="login()">Start</button>
 </div>
 
-<!-- HOME SCREEN -->
+<!-- HOME -->
 <div id="home" class="screen">
 <h2>Home</h2>
 <p>Coins: <span id="coins">0</span></p>
 <p>USDT: <span id="usdt">0</span></p>
+
 <div class="tap" onclick="tap()">💰</div>
+
 <button onclick="spin()">Spin</button>
 <button onclick="daily()">Daily</button>
 </div>
 
-<!-- PROFILE SCREEN -->
+<!-- PROFILE -->
 <div id="profile" class="screen">
 <h2>Profile</h2>
-<p>Username: <span id="displayUsername"></span></p>
+
+<p>Referrals: <span id="refs">0</span></p>
+<input id="refLink" readonly>
+
 <a href="https://t.me/gangs234" target="_blank">
 <button onclick="joinTelegram()">Join Telegram +500</button>
-</a><br>
-<a href="https://www.youtube.com/@Mamme234" target="_blank">
-<button onclick="reward('youtube')">YouTube +100</button>
-</a><br>
-<a href="https://www.tiktok.com/@mammeliyas" target="_blank">
-<button onclick="reward('tiktok')">TikTok +1000</button>
 </a>
+
 </div>
 
-<!-- WITHDRAW SCREEN -->
+<!-- WITHDRAW -->
 <div id="withdraw" class="screen">
 <h2>Withdraw</h2>
+<p>⚠️ Need 10 referrals</p>
 <input id="amount" placeholder="USDT"><br>
-<input id="wallet" placeholder="Binance wallet"><br>
+<input id="wallet" placeholder="Wallet"><br>
 <button onclick="withdraw()">Withdraw</button>
 </div>
 
-<!-- NAVIGATION -->
+<!-- NAV -->
 <div class="nav">
 <button onclick="show('home')">Home</button>
 <button onclick="show('profile')">Profile</button>
@@ -73,132 +76,141 @@ input { padding:10px; margin:5px; border-radius:5px; border:none; width:200px; }
 </div>
 
 <script>
-// --- CONFIG ---
-const API = "https://node-js-dsmy.onrender.com";
-let user = "";
-let subscribed = false;
+const API="https://node-js-dsmy.onrender.com";
 
-// --- NAVIGATION ---
-function show(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(screenId).classList.add('active');
+let user="";
+let unlocked=false;
+
+// REF
+const params=new URLSearchParams(window.location.search);
+const ref=params.get("ref");
+
+// NAV
+function show(s){
+document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+document.getElementById(s).classList.add('active');
 }
 
-// --- SUBSCRIBE CHECK ---
-function unlock() {
-  subscribed = true;
-  show('login');
+// LOCK
+function unlock(){
+unlocked=true;
+show('login');
 }
 
-// --- LOGIN ---
-function login() {
-  const usernameInput = document.getElementById("username").value.trim();
-  if (!usernameInput) return alert("Enter username first!");
-  user = usernameInput;
-  document.getElementById("displayUsername").innerText = user;
+// LOGIN
+function login(){
+if(!unlocked) return alert("Subscribe first");
 
-  fetch(API + "/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username: user})
-  })
-  .then(res => res.json())
-  .then(update)
-  .catch(err => console.error(err));
+user=document.getElementById("username").value.trim();
+if(!user) return alert("Enter username");
 
-  show('home');
+fetch(API+"/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,ref})
+})
+.then(r=>r.json())
+.then(d=>{
+update(d);
+document.getElementById("refLink").value=location.origin+"?ref="+user;
+show('home');
+});
 }
 
-// --- TAP ---
-function tap() {
-  fetch(API + "/tap", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username: user})
-  })
-  .then(res => res.json())
-  .then(update)
-  .catch(err => console.error(err));
+// CHECK USER
+function checkUser(){
+if(!user){
+alert("Login first");
+show('login');
+return false;
+}
+return true;
 }
 
-// --- DAILY REWARD ---
-function daily() {
-  fetch(API + "/daily", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username: user})
-  })
-  .then(res => res.json())
-  .then(d => {
-    alert(d.message);
-    if (d.user) update(d.user);
-  })
-  .catch(err => console.error(err));
+// TAP
+function tap(){
+if(!checkUser()) return;
+
+fetch(API+"/tap",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update);
 }
 
-// --- SPIN ---
-function spin() {
-  fetch(API + "/spin", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username: user})
-  })
-  .then(res => res.json())
-  .then(d => {
-    alert("Win " + d.win + " coins!");
-    if (d.user) update(d.user);
-  })
-  .catch(err => console.error(err));
+// DAILY
+function daily(){
+if(!checkUser()) return;
+
+fetch(API+"/daily",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(d=>{
+alert(d.message);
+if(d.user) update(d.user);
+});
 }
 
-// --- JOIN TELEGRAM ---
-function joinTelegram() {
-  fetch(API + "/join-telegram", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username: user})
-  })
-  .then(res => res.json())
-  .then(update)
-  .catch(err => console.error(err));
+// SPIN
+function spin(){
+if(!checkUser()) return;
+
+fetch(API+"/spin",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(d=>{
+alert("Win "+d.win);
+update(d.user);
+});
 }
 
-// --- REWARD (YouTube / TikTok) ---
-function reward(type) {
-  fetch(API + "/reward", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username: user, type})
-  })
-  .then(res => res.json())
-  .then(update)
-  .catch(err => console.error(err));
+// TELEGRAM
+function joinTelegram(){
+if(!checkUser()) return;
+
+fetch(API+"/join-telegram",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update);
 }
 
-// --- WITHDRAW ---
-function withdraw() {
-  const amount = document.getElementById("amount").value;
-  const wallet = document.getElementById("wallet").value;
+// WITHDRAW
+function withdraw(){
+if(!checkUser()) return;
 
-  if (!amount || !wallet) return alert("Enter amount and wallet!");
-  
-  fetch(API + "/withdraw", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username: user, amount, wallet})
-  })
-  .then(res => res.json())
-  .then(d => alert(d.message || d.error))
-  .catch(err => console.error(err));
+let amount=document.getElementById("amount").value;
+let wallet=document.getElementById("wallet").value;
+
+if(!amount||!wallet) return alert("Fill all");
+
+fetch(API+"/withdraw",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,amount,wallet})
+})
+.then(r=>r.json())
+.then(d=>alert(d.message||d.error));
 }
 
-// --- UPDATE UI ---
-function update(data) {
-  if (!data) return;
-  document.getElementById("coins").innerText = data.coins || 0;
-  document.getElementById("usdt").innerText = ((data.coins||0)/100).toFixed(2);
+// UPDATE
+function update(data){
+if(!data) return;
+document.getElementById("coins").innerText=data.coins||0;
+document.getElementById("usdt").innerText=((data.coins||0)/100).toFixed(2);
+document.getElementById("refs").innerText=data.refs||0;
 }
 </script>
 
 </body>
-</html>
+  </html>
