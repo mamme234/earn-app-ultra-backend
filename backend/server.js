@@ -1,117 +1,114 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
+const express=require("express");
+const mongoose=require("mongoose");
+const cors=require("cors");
+require("dotenv").config();
 
+const app=express();
 app.use(express.json());
 app.use(cors());
 
-let users = {};
-let withdrawals = [];
+// DB
+mongoose.connect(process.env.MONGO_URI)
+.then(()=>console.log("DB Connected"))
+.catch(err=>console.log(err));
+
+// MODEL
+const User=mongoose.model("User",{
+username:String,
+coins:{type:Number,default:0},
+refs:{type:Number,default:0},
+referredBy:String,
+daily:Date,
+telegram:{type:Boolean,default:false}
+});
 
 // LOGIN
-app.post('/login', (req, res) => {
-  const { username, ref } = req.body;
+app.post("/login",async(req,res)=>{
+let {username,ref}=req.body;
 
-  if (!users[username]) {
-    users[username] = {
-      coins: 0,
-      referrals: 0,
-      joinedTelegram: false,
-      lastDaily: 0
-    };
+let user=await User.findOne({username});
 
-    if (ref && users[ref]) {
-      users[ref].coins += 100;
-      users[ref].referrals++;
-    }
-  }
+if(!user){
+user=new User({username});
 
-  res.json(users[username]);
+if(ref && ref!==username){
+let refUser=await User.findOne({username:ref});
+if(refUser){
+refUser.refs+=1;
+refUser.coins+=500;
+await refUser.save();
+user.referredBy=ref;
+}
+}
+
+await user.save();
+}
+
+res.json(user);
 });
 
 // TAP
-app.post('/tap', (req, res) => {
-  const { username } = req.body;
-  users[username].coins += 10;
-  res.json(users[username]);
+app.post("/tap",async(req,res)=>{
+let user=await User.findOne({username:req.body.username});
+if(!user) return res.json({error:"No user"});
+user.coins+=1;
+await user.save();
+res.json(user);
 });
 
 // DAILY
-app.post('/daily', (req, res) => {
-  const { username } = req.body;
-  const now = Date.now();
+app.post("/daily",async(req,res)=>{
+let user=await User.findOne({username:req.body.username});
+let now=new Date();
 
-  if (now - users[username].lastDaily > 86400000) {
-    users[username].coins += 100;
-    users[username].lastDaily = now;
-    return res.json({ message: "Daily claimed", user: users[username] });
-  }
+if(user.daily && now-user.daily<86400000)
+return res.json({message:"Already claimed"});
 
-  res.json({ message: "Already claimed today" });
+user.daily=now;
+user.coins+=200;
+await user.save();
+
+res.json({message:"Daily +200",user});
 });
 
 // SPIN
-app.post('/spin', (req, res) => {
-  const { username } = req.body;
-  const win = Math.floor(Math.random() * 300) + 20;
-  users[username].coins += win;
-  res.json({ win, user: users[username] });
+app.post("/spin",async(req,res)=>{
+let user=await User.findOne({username:req.body.username});
+let win=Math.floor(Math.random()*100)+1;
+user.coins+=win;
+await user.save();
+res.json({win,user});
 });
 
-// TELEGRAM JOIN
-app.post('/join-telegram', (req, res) => {
-  const { username } = req.body;
-  users[username].joinedTelegram = true;
-  users[username].coins += 500;
-  res.json(users[username]);
-});
-
-// TASK REWARD
-app.post('/reward', (req, res) => {
-  const { username, type } = req.body;
-
-  const rewards = {
-    youtube: 100,
-    tiktok: 1000
-  };
-
-  users[username].coins += rewards[type] || 0;
-  res.json(users[username]);
+// TELEGRAM
+app.post("/join-telegram",async(req,res)=>{
+let user=await User.findOne({username:req.body.username});
+if(user.telegram) return res.json({error:"Already claimed"});
+user.telegram=true;
+user.coins+=500;
+await user.save();
+res.json(user);
 });
 
 // WITHDRAW
-app.post('/withdraw', (req, res) => {
-  const { username, amount, wallet } = req.body;
+app.post("/withdraw",async(req,res)=>{
+let {username,amount}=req.body;
 
-  const user = users[username];
-  const usdt = user.coins / 100;
+let user=await User.findOne({username});
+if(!user) return res.json({error:"No user"});
 
-  if (!user.joinedTelegram) return res.json({ error: "Join Telegram first" });
-  if (usdt < 20) return res.json({ error: "Minimum 20 USDT" });
-  if (user.referrals < 3) return res.json({ error: "Need 3 referrals" });
+if(user.refs<10)
+return res.json({error:"Need 10 referrals"});
 
-  user.coins -= amount * 100;
+let need=amount*100;
+if(user.coins<need)
+return res.json({error:"Not enough coins"});
 
-  withdrawals.push({
-    username,
-    amount,
-    wallet,
-    status: "pending"
-  });
+user.coins-=need;
+await user.save();
 
-  res.json({ message: "Withdraw request sent" });
+res.json({message:"Withdraw requested"});
 });
 
-// ADMIN
-app.get('/admin/withdrawals', (req, res) => {
-  res.json(withdrawals);
-});
-
-app.post('/admin/approve', (req, res) => {
-  const { index } = req.body;
-  withdrawals[index].status = "approved";
-  res.json({ message: "Approved" });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running"));
+// START
+app.listen(process.env.PORT,()=>console.log("Server running"));
