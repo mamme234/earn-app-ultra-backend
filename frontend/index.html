@@ -1,23 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tap Crypto Final</title>
-
 <style>
-body{margin:0;background:#0f0f0f;color:white;text-align:center;font-family:sans-serif;}
-.screen{display:none;padding:20px;}
-.active{display:block;}
-.nav{position:fixed;bottom:0;width:100%;background:#111;}
-button{padding:10px;margin:5px;border:none;border-radius:10px;background:#00ffcc;color:black;}
-input{padding:10px;margin:5px;border-radius:5px;border:none;}
-.tap{width:120px;height:120px;background:gold;border-radius:50%;margin:auto;font-size:30px;display:flex;align-items:center;justify-content:center;}
+body { margin:0; background:#0f0f0f; color:white; text-align:center; font-family:sans-serif; }
+.screen { display:none; padding:20px; }
+.active { display:block; }
+.nav { position:fixed; bottom:0; width:100%; background:#111; display:flex; justify-content:space-around; padding:10px 0; }
+button { padding:10px; margin:5px; border:none; border-radius:10px; background:#00ffcc; color:black; cursor:pointer; }
+input { padding:10px; margin:5px; border-radius:5px; border:none; width:200px; }
+.tap { width:120px; height:120px; background:gold; border-radius:50%; margin:auto; font-size:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
 </style>
-
 </head>
 <body>
 
-<!-- SUBSCRIBE -->
+<!-- SUBSCRIBE SCREEN -->
 <div id="sub" class="screen active">
 <h2>Subscribe First</h2>
 <a href="https://www.youtube.com/@Mamme234" target="_blank">
@@ -26,7 +25,14 @@ input{padding:10px;margin:5px;border-radius:5px;border:none;}
 <button onclick="unlock()">I Subscribed</button>
 </div>
 
-<!-- HOME -->
+<!-- LOGIN SCREEN -->
+<div id="login" class="screen">
+<h2>Enter Username</h2>
+<input id="username" placeholder="Username"><br>
+<button onclick="login()">Start</button>
+</div>
+
+<!-- HOME SCREEN -->
 <div id="home" class="screen">
 <h2>Home</h2>
 <p>Coins: <span id="coins">0</span></p>
@@ -36,25 +42,22 @@ input{padding:10px;margin:5px;border-radius:5px;border:none;}
 <button onclick="daily()">Daily</button>
 </div>
 
-<!-- PROFILE -->
+<!-- PROFILE SCREEN -->
 <div id="profile" class="screen">
 <h2>Profile</h2>
-<input id="username" placeholder="Username"><br>
-
+<p>Username: <span id="displayUsername"></span></p>
 <a href="https://t.me/gangs234" target="_blank">
 <button onclick="joinTelegram()">Join Telegram +500</button>
 </a><br>
-
 <a href="https://www.youtube.com/@Mamme234" target="_blank">
 <button onclick="reward('youtube')">YouTube +100</button>
 </a><br>
-
 <a href="https://www.tiktok.com/@mammeliyas" target="_blank">
 <button onclick="reward('tiktok')">TikTok +1000</button>
 </a>
 </div>
 
-<!-- WITHDRAW -->
+<!-- WITHDRAW SCREEN -->
 <div id="withdraw" class="screen">
 <h2>Withdraw</h2>
 <input id="amount" placeholder="USDT"><br>
@@ -62,6 +65,7 @@ input{padding:10px;margin:5px;border-radius:5px;border:none;}
 <button onclick="withdraw()">Withdraw</button>
 </div>
 
+<!-- NAVIGATION -->
 <div class="nav">
 <button onclick="show('home')">Home</button>
 <button onclick="show('profile')">Profile</button>
@@ -69,57 +73,132 @@ input{padding:10px;margin:5px;border-radius:5px;border:none;}
 </div>
 
 <script>
-const API="https://earn-app-ultra-backend-1.onrender.com";
-let user="";
-let subscribed=false;
+// --- CONFIG ---
+const API = "https://node-js-dsmy.onrender.com";
+let user = "";
+let subscribed = false;
 
-function unlock(){subscribed=true;show('home');}
-function show(s){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(s).classList.add('active');}
-
-function login(){
-user=document.getElementById("username").value;
-fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-.then(r=>r.json()).then(update);
+// --- NAVIGATION ---
+function show(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
 }
 
-function tap(){
-fetch(API+"/tap",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-.then(r=>r.json()).then(update);
+// --- SUBSCRIBE CHECK ---
+function unlock() {
+  subscribed = true;
+  show('login');
 }
 
-function daily(){
-fetch(API+"/daily",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-.then(r=>r.json()).then(d=>{alert(d.message);if(d.user)update(d.user);});
+// --- LOGIN ---
+function login() {
+  const usernameInput = document.getElementById("username").value.trim();
+  if (!usernameInput) return alert("Enter username first!");
+  user = usernameInput;
+  document.getElementById("displayUsername").innerText = user;
+
+  fetch(API + "/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: user})
+  })
+  .then(res => res.json())
+  .then(update)
+  .catch(err => console.error(err));
+
+  show('home');
 }
 
-function spin(){
-fetch(API+"/spin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-.then(r=>r.json()).then(d=>{alert("Win "+d.win);update(d.user);});
+// --- TAP ---
+function tap() {
+  fetch(API + "/tap", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: user})
+  })
+  .then(res => res.json())
+  .then(update)
+  .catch(err => console.error(err));
 }
 
-function joinTelegram(){
-fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-.then(r=>r.json()).then(update);
+// --- DAILY REWARD ---
+function daily() {
+  fetch(API + "/daily", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: user})
+  })
+  .then(res => res.json())
+  .then(d => {
+    alert(d.message);
+    if (d.user) update(d.user);
+  })
+  .catch(err => console.error(err));
 }
 
-function reward(type){
-fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type})})
-.then(r=>r.json()).then(update);
+// --- SPIN ---
+function spin() {
+  fetch(API + "/spin", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: user})
+  })
+  .then(res => res.json())
+  .then(d => {
+    alert("Win " + d.win + " coins!");
+    if (d.user) update(d.user);
+  })
+  .catch(err => console.error(err));
 }
 
-function withdraw(){
-let amount=document.getElementById("amount").value;
-let wallet=document.getElementById("wallet").value;
-
-fetch(API+"/withdraw",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,amount,wallet})})
-.then(r=>r.json()).then(d=>alert(d.message||d.error));
+// --- JOIN TELEGRAM ---
+function joinTelegram() {
+  fetch(API + "/join-telegram", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: user})
+  })
+  .then(res => res.json())
+  .then(update)
+  .catch(err => console.error(err));
 }
 
-function update(data){
-document.getElementById("coins").innerText=data.coins;
-document.getElementById("usdt").innerText=(data.coins/100).toFixed(2);
+// --- REWARD (YouTube / TikTok) ---
+function reward(type) {
+  fetch(API + "/reward", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: user, type})
+  })
+  .then(res => res.json())
+  .then(update)
+  .catch(err => console.error(err));
+}
+
+// --- WITHDRAW ---
+function withdraw() {
+  const amount = document.getElementById("amount").value;
+  const wallet = document.getElementById("wallet").value;
+
+  if (!amount || !wallet) return alert("Enter amount and wallet!");
+  
+  fetch(API + "/withdraw", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({username: user, amount, wallet})
+  })
+  .then(res => res.json())
+  .then(d => alert(d.message || d.error))
+  .catch(err => console.error(err));
+}
+
+// --- UPDATE UI ---
+function update(data) {
+  if (!data) return;
+  document.getElementById("coins").innerText = data.coins || 0;
+  document.getElementById("usdt").innerText = ((data.coins||0)/100).toFixed(2);
 }
 </script>
 
 </body>
-  </html>
+</html>
