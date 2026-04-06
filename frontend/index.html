@@ -140,6 +140,29 @@ body{
   transform:scale(1.05);
   box-shadow:0 0 20px #FF6347;
 }
+
+/* REFERRAL INPUT */
+#refLink{
+  width:80%;
+  padding:8px;
+  border-radius:10px;
+  border:none;
+  text-align:center;
+  background: rgba(255, 215, 0, 0.2);
+  color:#fff;
+  font-weight:bold;
+  border: 2px dashed gold;
+  margin-right:2%;
+}
+.copy-btn{
+  width:18%;
+  padding:8px;
+  border-radius:10px;
+  background:gold;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -197,7 +220,11 @@ body{
     <div class="orange" id="pRefs">0</div>
   </div>
 
-  <input id="refLink" style="width:100%;margin-top:10px;" readonly>
+  <!-- REFERRAL COPY -->
+  <div style="margin-top:10px; display:flex;">
+    <input id="refLink" readonly>
+    <button class="copy-btn" onclick="copyRef()">Copy</button>
+  </div>
 
   <!-- SOCIAL TASKS -->
   <div class="social-tasks" style="margin-top:15px;">
@@ -253,23 +280,31 @@ body:JSON.stringify({username:user})
 .catch(()=>alert("Server error"));
 }
 
-// TAP
+// TAP: 1 coin per click + instant update
 function tap(){
-fetch(API+"/tap",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user})
-})
-.then(r=>r.json())
-.then(update)
-.catch(()=>alert("Tap error"));
+    let coinsEl = document.getElementById("coins");
+    let usdtEl = document.getElementById("usdt");
+    
+    let coins = Number(coinsEl.innerText) + 1;
+    coinsEl.innerText = coins;
+    usdtEl.innerText = (coins / 100).toFixed(2);
 
-// effect
-let plus=document.createElement("div");
-plus.innerText="+1";
-plus.className="float";
-document.querySelector(".tap-wrap").appendChild(plus);
-setTimeout(()=>plus.remove(),1000);
+    // Floating +1 effect
+    let plus=document.createElement("div");
+    plus.innerText="+1";
+    plus.className="float";
+    document.querySelector(".tap-wrap").appendChild(plus);
+    setTimeout(()=>plus.remove(),1000);
+
+    // Send request to backend
+    fetch(API+"/tap",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({username:user})
+    })
+    .then(r=>r.json())
+    .then(update)
+    .catch(()=>alert("Tap error"));
 }
 
 // FIXED UPDATE
@@ -285,6 +320,16 @@ document.getElementById("usdt").innerText=(coins/100).toFixed(2);
 if(document.getElementById("pRefs")){
 document.getElementById("pRefs").innerText=data.refs||0;
 }
+}
+
+// REFERRAL COPY
+function copyRef(){
+    let ref = document.getElementById("refLink");
+    ref.select();
+    ref.setSelectionRange(0, 99999); // mobile
+    navigator.clipboard.writeText(ref.value)
+        .then(()=>alert("Referral link copied! ✅"))
+        .catch(()=>alert("Failed to copy!"));
 }
 
 // NAV
@@ -344,4 +389,4 @@ loadUser();
 </script>
 
 </body>
-</html>
+      </html>
