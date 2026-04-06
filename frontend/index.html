@@ -44,7 +44,6 @@ body{
   height:10px;
   background:#222;
   border-radius:10px;
-  overflow:hidden;
 }
 .fill{
   width:10%;
@@ -104,7 +103,7 @@ body{
 
 <body>
 
-<!-- HOME CONTENT -->
+<!-- HOME -->
 <div id="homeScreen">
 
 <div class="card">
@@ -158,7 +157,17 @@ body{
 
   <input id="refLink" style="width:100%;margin-top:10px;" readonly>
 
-  <button onclick="join()">Join Telegram +500</button>
+  <a href="https://t.me/gangs234" target="_blank">
+  <button onclick="joinTG()">Join Telegram +500</button>
+  </a>
+
+  <a href="https://www.tiktok.com/@mammeliyas" target="_blank">
+  <button onclick="followTikTok()">Follow TikTok +1000</button>
+  </a>
+
+  <a href="https://www.youtube.com/@Mamme234" target="_blank">
+  <button onclick="subscribeYT()">Subscribe YouTube +500</button>
+  </a>
 </div>
 
 <!-- WITHDRAW -->
@@ -195,7 +204,8 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({username:user})
 })
 .then(r=>r.json())
-.then(update);
+.then(update)
+.catch(()=>alert("Server error"));
 }
 
 // TAP
@@ -206,31 +216,33 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({username:user})
 })
 .then(r=>r.json())
-.then(update);
+.then(update)
+.catch(()=>alert("Tap error"));
 
 // effect
 let plus=document.createElement("div");
 plus.innerText="+1";
 plus.className="float";
-
 document.querySelector(".tap-wrap").appendChild(plus);
 setTimeout(()=>plus.remove(),1000);
 }
 
-// UPDATE
+// FIXED UPDATE
 function update(data){
 if(!data) return;
 if(data.user) data=data.user;
 
-document.getElementById("coins").innerText=data.coins||0;
-document.getElementById("usdt").innerText=((data.coins||0)/100).toFixed(2);
+let coins=Number(data.coins||0);
+
+document.getElementById("coins").innerText=coins;
+document.getElementById("usdt").innerText=(coins/100).toFixed(2);
 
 if(document.getElementById("pRefs")){
 document.getElementById("pRefs").innerText=data.refs||0;
 }
 }
 
-// NAVIGATION
+// NAV
 function showHome(){
 document.getElementById("homeScreen").style.display="block";
 document.getElementById("profileScreen").style.display="none";
@@ -252,17 +264,23 @@ document.getElementById("profileScreen").style.display="none";
 document.getElementById("withdrawScreen").style.display="block";
 }
 
-// ACTIONS
-function join(){
-fetch(API+"/join-telegram",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user})
-})
-.then(r=>r.json())
-.then(update);
+// REWARDS
+function joinTG(){
+fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
+.then(r=>r.json()).then(update);
 }
 
+function followTikTok(){
+fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"tiktok"})})
+.then(r=>r.json()).then(update);
+}
+
+function subscribeYT(){
+fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"youtube"})})
+.then(r=>r.json()).then(update);
+}
+
+// WITHDRAW
 function withdraw(){
 let amount=document.getElementById("amount").value;
 let wallet=document.getElementById("wallet").value;
