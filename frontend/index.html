@@ -163,6 +163,20 @@ body{
   font-weight:bold;
   cursor:pointer;
 }
+
+/* TASK COMPLETION POPUP */
+.task-popup{
+  position:fixed;
+  bottom:120px;
+  left:50%;
+  transform:translateX(-50%);
+  background:gold;
+  color:#000;
+  padding:10px 20px;
+  border-radius:15px;
+  font-weight:bold;
+  z-index:9999;
+}
 </style>
 </head>
 
@@ -257,24 +271,19 @@ body{
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const API = "https://node-js-1-v8du.onrender.com"; // your backend
+const API = "https://node-js-1-v8du.onrender.com"; // backend
 let user = tg.initDataUnsafe?.user?.username || "guest";
 
-// Local frontend state
-let state = {
-    coins: 0,
-    level: 1,
-    refs: 0
-};
+// State
+let state = { coins:0, level:1, refs:0 };
 
-// LOAD USER
+// Load user from backend
 function loadUser(){
     fetch(API+"/login",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({username:user})
-    })
-    .then(r=>r.json())
+    }).then(r=>r.json())
     .then(data=>{
         if(data.user){
             state.coins = data.user.coins || 0;
@@ -284,19 +293,18 @@ function loadUser(){
     }).catch(()=>console.log("Backend not responding. Using local state."));
 }
 
-// TAP FUNCTION
+// TAP
 function tap(){
-    state.coins += 1; // 1 coin per tap
+    state.coins += 1;
     updateUI();
 
-    // floating +1 animation
+    // floating +1
     let plus = document.createElement("div");
     plus.innerText = "+1";
-    plus.className = "float";
+    plus.className="float";
     document.querySelector(".tap-wrap").appendChild(plus);
-    setTimeout(() => plus.remove(), 1000);
+    setTimeout(()=>plus.remove(),1000);
 
-    // backend sync
     fetch(API+"/tap",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -304,78 +312,85 @@ function tap(){
     }).catch(()=>console.log("Tap not sent to backend"));
 }
 
-// SOCIAL TASKS
+// REAL SOCIAL TASK
 function socialTask(type){
-    let reward = 0;
-    if(type=="tg") reward = 500;
-    else if(type=="tiktok") reward = 1000;
-    else if(type=="yt") reward = 500;
+    let url="", reward=0;
+    if(type=="tg"){ url="https://t.me/gangs234"; reward=500; }
+    else if(type=="tiktok"){ url="https://www.tiktok.com/@mammeliyas"; reward=1000; }
+    else if(type=="yt"){ url="https://www.youtube.com/@Mamme234"; reward=500; }
 
-    state.coins += reward;
-    updateUI();
+    // Open link
+    window.open(url,"_blank");
 
-    let plus=document.createElement("div");
-    plus.innerText="+"+reward;
-    plus.className="float";
-    document.querySelector("#profileScreen").appendChild(plus);
-    setTimeout(()=>plus.remove(),1000);
+    // reward after 3 sec
+    setTimeout(()=>{
+        state.coins += reward;
+        updateUI();
 
-    fetch(API+"/reward",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({username:user,type:type})
-    }).catch(()=>console.log("Reward not sent to backend"));
+        // floating
+        let plus=document.createElement("div");
+        plus.innerText="+"+reward;
+        plus.className="float";
+        document.querySelector("#profileScreen").appendChild(plus);
+        setTimeout(()=>plus.remove(),1000);
+
+        // popup
+        showTaskComplete("🎉 Task Completed! +" + reward + " coins");
+
+        // backend sync
+        fetch(API+"/reward",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({username:user,type:type})
+        }).catch(()=>console.log("Reward not sent to backend"));
+
+    },3000);
+}
+
+// TASK POPUP
+function showTaskComplete(msg){
+    let div = document.createElement("div");
+    div.className="task-popup";
+    div.innerText = msg;
+    document.body.appendChild(div);
+    setTimeout(()=>div.remove(),2000);
 }
 
 // UPDATE UI
 function updateUI(){
-    // Level calculation (1 level per 10000 coins)
-    state.level = Math.floor(state.coins / 10000) + 1;
-
-    // Progress to next level
-    let progress = (state.coins % 10000) / 10000 * 100;
-    document.getElementById("progress").style.width = progress + "%";
-    document.getElementById("progressText").innerText = Math.floor(progress) + "%";
-
-    // Coins display
-    document.getElementById("coins").innerText = state.coins;
-
-    // USDT display (1000 coins = 1 USDT)
-    document.getElementById("usdt").innerText = (state.coins / 1000).toFixed(2);
-
-    // Referral display
-    document.getElementById("pRefs").innerText = state.refs;
-
-    // Level display
-    document.getElementById("level").innerText = state.level;
+    state.level = Math.floor(state.coins/10000)+1;
+    let progress = (state.coins%10000)/10000*100;
+    document.getElementById("progress").style.width=progress+"%";
+    document.getElementById("progressText").innerText=Math.floor(progress)+"%";
+    document.getElementById("coins").innerText=state.coins;
+    document.getElementById("usdt").innerText=(state.coins/1000).toFixed(2);
+    document.getElementById("pRefs").innerText=state.refs;
+    document.getElementById("level").innerText=state.level;
 }
 
-// REFERRAL COPY
+// COPY REFERRAL
 function copyRef(){
-    let ref = document.getElementById("refLink");
+    let ref=document.getElementById("refLink");
     ref.select();
-    ref.setSelectionRange(0, 99999);
+    ref.setSelectionRange(0,99999);
     navigator.clipboard.writeText(ref.value)
         .then(()=>alert("Referral link copied! ✅"))
         .catch(()=>alert("Failed to copy!"));
 }
 
-// NAVIGATION
+// NAV
 function showHome(){
     document.getElementById("homeScreen").style.display="block";
     document.getElementById("profileScreen").style.display="none";
     document.getElementById("withdrawScreen").style.display="none";
 }
-
 function profile(){
     document.getElementById("homeScreen").style.display="none";
     document.getElementById("profileScreen").style.display="block";
     document.getElementById("withdrawScreen").style.display="none";
-
     document.getElementById("pUser").innerText=user;
     document.getElementById("refLink").value = location.origin + "?ref=" + user + "&app=Crypto";
 }
-
 function withdrawScreenShow(){
     document.getElementById("homeScreen").style.display="none";
     document.getElementById("profileScreen").style.display="none";
@@ -400,4 +415,4 @@ loadUser();
 </script>
 
 </body>
-  </html>
+      </html>
