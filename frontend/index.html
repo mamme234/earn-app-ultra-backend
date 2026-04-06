@@ -4,153 +4,258 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Earn Ultra</title>
+
 <style>
-body{margin:0;font-family:sans-serif;background:#0b0b0b;color:#fff;display:flex;flex-direction:column;align-items:center;}
-.card{width:90%;max-width:400px;margin-top:15px;padding:15px;border-radius:20px;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);box-shadow:0 0 25px rgba(255,165,0,0.2);}
+body{margin:0;font-family:sans-serif;background:#0b0b0b;color:#fff;text-align:center;}
+.card{background:#111;margin:10px;padding:15px;border-radius:15px;}
 .row{display:flex;justify-content:space-between;margin:5px 0;}
-.orange{color:#ffb347;}
-.center{text-align:center;}
-.bar{width:100%;height:10px;background:#222;border-radius:10px;}
-.fill{width:10%;height:100%;background:linear-gradient(to right, gold, orange);}
-.tap-wrap{margin-top:20px;position:relative;}
-.tap{width:180px;height:180px;border-radius:50%;background:radial-gradient(circle, #ffcc00, #b8860b);display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px gold;}
-.tap img{width:100px;}
-.nav{position:fixed;bottom:10px;width:95%;max-width:400px;display:flex;justify-content:space-between;}
-.nav button{flex:1;margin:5px;padding:12px;border:none;border-radius:15px;background:#111;color:#ffb347;font-size:16px;}
+.orange{color:orange;}
+.tap{width:150px;height:150px;background:gold;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:20px auto;font-size:20px;font-weight:bold;}
+.nav{position:fixed;bottom:0;width:100%;display:flex;}
+.nav button{flex:1;padding:10px;background:#111;color:#fff;border:none;}
 .float{position:absolute;color:gold;animation:up 1s forwards;}
-@keyframes up{0%{opacity:1;}100%{opacity:0;transform:translateY(-60px);}}
+@keyframes up{100%{transform:translateY(-60px);opacity:0;}}
+
+/* SOCIAL */
+.social-btn{width:100%;padding:12px;margin:6px 0;border:none;border-radius:12px;color:#fff;font-weight:bold;}
+.tg{background:#0088cc;}
+.tiktok{background:#ff0050;}
+.yt{background:red;}
+
+/* POPUP */
+#rewardPopup{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+background:gold;
+color:#000;
+padding:10px 20px;
+border-radius:20px;
+display:none;
+font-weight:bold;
+}
+
+/* LIVE FEED */
+#liveFeed{
+position:fixed;
+bottom:70px;
+left:10px;
+background:#111;
+padding:10px;
+border-radius:10px;
+font-size:12px;
+color:#0f0;
+}
+
+/* REFERRAL */
+#refBox{
+display:flex;
+margin-top:10px;
+}
+#refLink{
+flex:1;
+padding:8px;
+border-radius:10px;
+border:none;
+text-align:center;
+background:#222;
+color:#fff;
+}
+.copy-btn{
+padding:8px;
+background:gold;
+border:none;
+border-radius:10px;
+margin-left:5px;
+}
 </style>
 </head>
+
 <body>
 
+<div id="rewardPopup">+0</div>
+<div id="liveFeed">💸 User withdrew 2 USDT</div>
+
 <!-- HOME -->
-<div id="homeScreen">
+<div id="home">
 <div class="card">
-  <div class="center"><b>👑 Balance</b></div>
-  <div class="row"><div>Level:</div><div class="orange" id="level">1</div></div>
-  <div class="row"><div>Coins:</div><div class="orange" id="coins">0</div></div>
-  <div class="row"><div>USDT:</div><div class="orange" id="usdt">0.00</div></div>
+<div class="row"><span>Level</span><span id="level">1</span></div>
+<div class="row"><span>Coins</span><span id="coins">0</span></div>
+<div class="row"><span>USDT</span><span id="usdt">0.00</span></div>
 </div>
 
-<div class="card">
-  <div class="center">Next Level</div>
-  <div class="bar"><div class="fill" id="progress"></div></div>
-  <div class="center" id="progressText">0%</div>
-</div>
-
-<div class="tap-wrap">
-  <div class="tap" onclick="tap()" id="tapBtn">
-    <img src="https://cdn-icons-png.flaticon.com/512/138/138292.png">
-  </div>
-</div>
+<div class="tap" onclick="tap()">TAP</div>
 </div>
 
 <!-- PROFILE -->
-<div id="profileScreen" class="card" style="display:none;">
-  <div class="center"><b>👤 Profile</b></div>
-  <div class="row"><div>Username:</div><div class="orange" id="pUser"></div></div>
-  <div class="row"><div>Referrals:</div><div class="orange" id="pRefs">0</div></div>
-  <input id="refLink" style="width:100%;margin-top:10px;" readonly>
-  <a href="https://t.me/gangs234" target="_blank"><button onclick="joinTG()">Join Telegram +500</button></a>
-  <a href="https://www.tiktok.com/@mammeliyas" target="_blank"><button onclick="followTikTok()">Follow TikTok +1000</button></a>
-  <a href="https://www.youtube.com/@Mamme234" target="_blank"><button onclick="subscribeYT()">Subscribe YouTube +500</button></a>
+<div id="profile" style="display:none;">
+<div class="card">
+<div>👤 <span id="username"></span></div>
+<div>Referrals: <span id="refs">0</span></div>
+
+<div id="refBox">
+<input id="refLink" readonly>
+<button class="copy-btn" onclick="copyRef()">Copy</button>
+</div>
+
+<button onclick="shareRef()">🚀 Invite Friends</button>
+
+<button class="social-btn tg" onclick="joinTG()">Join TG +500</button>
+<button class="social-btn tiktok" onclick="followTikTok()">TikTok +1000</button>
+<button class="social-btn yt" onclick="subscribeYT()">YouTube +500</button>
+</div>
 </div>
 
 <!-- WITHDRAW -->
-<div id="withdrawScreen" class="card" style="display:none;">
-  <div class="center"><b>💰 Withdraw</b></div>
-  <p>Need 10 referrals</p>
-  <input id="amount" placeholder="USDT" style="width:100%;">
-  <input id="wallet" placeholder="Wallet" style="width:100%;">
-  <button onclick="withdraw()">Submit</button>
+<div id="withdraw" style="display:none;">
+<div class="card">
+<input id="amount" placeholder="USDT">
+<input id="wallet" placeholder="Wallet">
+<button onclick="withdrawNow()">Withdraw</button>
+</div>
 </div>
 
 <!-- NAV -->
 <div class="nav">
-  <button onclick="showHome()">👍 Home</button>
-  <button onclick="profile()">👤 Profile</button>
-  <button onclick="withdrawScreenShow()">📩 Withdraw</button>
+<button onclick="show('home')">Home</button>
+<button onclick="show('profile')">Profile</button>
+<button onclick="show('withdraw')">Withdraw</button>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
+
 const API="https://node-js-1-v8du.onrender.com";
-let user = tg.initDataUnsafe?.user?.username || "guest";
+
+// ✅ REAL TELEGRAM USERNAME
+let user = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.id || "guest";
 
 // LOAD USER
 function loadUser(){
-  let urlParams = new URLSearchParams(window.location.search);
-  let ref = urlParams.get("ref");
-  fetch(API+"/login",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({username:user, ref})
-  })
-  .then(r=>r.json())
-  .then(update)
-  .catch(()=>alert("Server error"));
+let ref=new URLSearchParams(location.search).get("ref");
+
+fetch(API+"/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,ref})
+})
+.then(r=>r.json())
+.then(update);
 }
 
 // TAP
 function tap(){
-  fetch(API+"/tap",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-  .then(r=>r.json())
-  .then(update)
-  .catch(()=>alert("Tap error"));
+fetch(API+"/tap",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update);
 
-  let plus=document.createElement("div");
-  plus.innerText="+1";
-  plus.className="float";
-  document.querySelector(".tap-wrap").appendChild(plus);
-  setTimeout(()=>plus.remove(),1000);
+let plus=document.createElement("div");
+plus.innerText="+1";
+plus.className="float";
+document.body.appendChild(plus);
+setTimeout(()=>plus.remove(),1000);
 }
 
 // UPDATE
 function update(data){
-  if(!data) return;
-  if(data.user) data=data.user;
+let d=data.user?data.user:data;
 
-  let coins=Number(data.coins||0);
-  document.getElementById("coins").innerText=coins;
-  document.getElementById("usdt").innerText=(coins/1000).toFixed(2);
+let coins=d.coins||0;
 
-  // LEVEL
-  let level = Math.floor(coins/10000)+1;
-  document.getElementById("level").innerText=level;
-  let next = ((coins % 10000)/10000)*100;
-  document.getElementById("progress").style.width=next+"%";
-  document.getElementById("progressText").innerText=Math.floor(next)+"%";
+document.getElementById("coins").innerText=coins;
+document.getElementById("usdt").innerText=(coins/1000).toFixed(2);
 
-  if(document.getElementById("pRefs")) document.getElementById("pRefs").innerText=data.refs||0;
+let level=Math.floor(coins/10000)+1;
+document.getElementById("level").innerText=level;
+
+document.getElementById("refs").innerText=d.refs||0;
+document.getElementById("username").innerText=user;
+
+document.getElementById("refLink").value=location.origin+"?ref="+user;
 }
 
 // NAV
-function showHome(){document.getElementById("homeScreen").style.display="block";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="none";}
-function profile(){
-  document.getElementById("homeScreen").style.display="none";
-  document.getElementById("profileScreen").style.display="block";
-  document.getElementById("withdrawScreen").style.display="none";
-  document.getElementById("pUser").innerText=user;
-  document.getElementById("refLink").value=location.origin+"?ref="+user;
+function show(x){
+document.getElementById("home").style.display="none";
+document.getElementById("profile").style.display="none";
+document.getElementById("withdraw").style.display="none";
+document.getElementById(x).style.display="block";
 }
-function withdrawScreenShow(){document.getElementById("homeScreen").style.display="none";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="block";}
 
-// SOCIAL TASKS
-function joinTG(){fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})}).then(r=>r.json()).then(update);}
-function followTikTok(){fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"tiktok"})}).then(r=>r.json()).then(update);}
-function subscribeYT(){fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"youtube"})}).then(r=>r.json()).then(update);}
+// SOCIAL
+function joinTG(){reward("join-telegram",500);}
+function followTikTok(){reward("reward",1000,"tiktok");}
+function subscribeYT(){reward("reward",500,"youtube");}
+
+function reward(url,amount,type){
+fetch(API+"/"+url,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,type})
+})
+.then(r=>r.json())
+.then(d=>{
+update(d);
+showReward(amount);
+});
+}
+
+// POPUP
+function showReward(a){
+let p=document.getElementById("rewardPopup");
+p.innerText="💰 +"+a;
+p.style.display="block";
+setTimeout(()=>p.style.display="none",1500);
+}
+
+// REFERRAL
+function copyRef(){
+navigator.clipboard.writeText(document.getElementById("refLink").value);
+alert("Copied!");
+}
+
+function shareRef(){
+let link=document.getElementById("refLink").value;
+let text="🔥 Earn USDT free!\n"+link;
+
+if(navigator.share){
+navigator.share({text,url:link});
+}else{
+copyRef();
+}
+}
 
 // WITHDRAW
-function withdraw(){
-  let amount=document.getElementById("amount").value;
-  let wallet=document.getElementById("wallet").value;
-  fetch(API+"/withdraw",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,amount,wallet})})
-  .then(r=>r.json()).then(d=>alert(d.message||d.error));
+function withdrawNow(){
+let amount=document.getElementById("amount").value;
+let wallet=document.getElementById("wallet").value;
+
+fetch(API+"/withdraw",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,amount,wallet})
+})
+.then(r=>r.json())
+.then(d=>alert(d.message||d.error));
 }
+
+// FAKE LIVE FEED
+setInterval(()=>{
+let names=["Abel","Noah","Sara","John"];
+let amt=[1,2,5,10];
+document.getElementById("liveFeed").innerText=
+"💸 "+names[Math.random()*4|0]+" withdrew "+amt[Math.random()*4|0]+" USDT";
+},4000);
 
 // START
 loadUser();
 </script>
+
 </body>
-    </html>
+  </html>
