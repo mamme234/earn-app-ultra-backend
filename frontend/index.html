@@ -3,7 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<title>Crypto</title>
+<title>Earn Ultra</title>
 
 <style>
 body{
@@ -186,7 +186,7 @@ body{
 <div id="homeScreen">
 
 <div class="card">
-  <div class="center"><b>👑 Crypto Balance</b></div>
+  <div class="center"><b>👑 Balance</b></div>
 
   <div class="row">
     <div>Level:</div>
@@ -242,9 +242,9 @@ body{
 
   <!-- SOCIAL TASKS -->
   <div class="social-tasks" style="margin-top:15px;">
-    <button class="social-btn tg" onclick="socialTask('tg')">Join Telegram +500</button>
-    <button class="social-btn tiktok" onclick="socialTask('tiktok')">Follow TikTok +1000</button>
-    <button class="social-btn yt" onclick="socialTask('yt')">Subscribe YouTube +500</button>
+    <button class="social-btn tg" onclick="joinTG()">Join Telegram +500</button>
+    <button class="social-btn tiktok" onclick="followTikTok()">Follow TikTok +1000</button>
+    <button class="social-btn yt" onclick="subscribeYT()">Subscribe YouTube +500</button>
   </div>
 </div>
 
@@ -271,134 +271,112 @@ body{
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const API = "https://node-js-1-v8du.onrender.com"; 
+const API="https://node-js-1-v8du.onrender.com";
 let user = tg.initDataUnsafe?.user?.username || "guest";
-
-let state = { coins:0, level:1, refs:0 };
 
 // LOAD USER
 function loadUser(){
-    fetch(API+"/login",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({username:user})
-    }).then(r=>r.json())
-    .then(data=>{
-        if(data.user){
-            state.coins = data.user.coins || 0;
-            state.refs = data.user.refs || 0;
-            updateUI();
-        }
-    }).catch(()=>console.log("Backend not responding."));
+fetch(API+"/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update)
+.catch(()=>console.log("Server error"));
 }
 
-// TAP
+// TAP FUNCTION
 function tap(){
-    fetch(API+"/tap",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({username:user})
-    }).then(r=>r.json())
-    .then(data=>{
-        if(data.coins !== undefined) state.coins = data.coins;
-        updateUI();
-    }).catch(()=>console.log("Tap not saved"));
+fetch(API+"/tap",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update)
+.catch(()=>alert("Tap error"));
 
-    let plus = document.createElement("div");
-    plus.innerText = "+1";
-    plus.className="float";
-    document.querySelector(".tap-wrap").appendChild(plus);
-    setTimeout(()=>plus.remove(),1000);
-}
-
-// SOCIAL TASK
-function socialTask(type){
-    let url="", reward=0;
-    if(type=="tg"){ url="https://t.me/gangs234"; reward=500; }
-    else if(type=="tiktok"){ url="https://www.tiktok.com/@mammeliyas"; reward=1000; }
-    else if(type=="yt"){ url="https://www.youtube.com/@Mamme234"; reward=500; }
-
-    window.open(url,"_blank");
-
-    setTimeout(()=>{
-        fetch(API+"/reward",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({username:user,type:type})
-        }).then(r=>r.json())
-        .then(data=>{
-            if(data.coins !== undefined) state.coins = data.coins;
-            updateUI();
-        }).catch(()=>console.log("Reward not saved"));
-
-        let plus=document.createElement("div");
-        plus.innerText="+"+reward;
-        plus.className="float";
-        document.querySelector("#profileScreen").appendChild(plus);
-        setTimeout(()=>plus.remove(),1000);
-
-        showTaskComplete("🎉 Task Completed! +" + reward + " coins");
-    },3000);
-}
-
-function showTaskComplete(msg){
-    let div = document.createElement("div");
-    div.className="task-popup";
-    div.innerText = msg;
-    document.body.appendChild(div);
-    setTimeout(()=>div.remove(),2000);
+// Floating +1
+let plus=document.createElement("div");
+plus.innerText="+1";
+plus.className="float";
+document.querySelector(".tap-wrap").appendChild(plus);
+setTimeout(()=>plus.remove(),1000);
 }
 
 // UPDATE UI
-function updateUI(){
-    state.level = Math.floor(state.coins/10000)+1;
-    let progress = (state.coins%10000)/10000*100;
-    document.getElementById("progress").style.width=progress+"%";
-    document.getElementById("progressText").innerText=Math.floor(progress)+"%";
-    document.getElementById("coins").innerText=state.coins;
-    document.getElementById("usdt").innerText=(state.coins/1000).toFixed(2);
-    document.getElementById("pRefs").innerText=state.refs;
-    document.getElementById("level").innerText=state.level;
+function update(data){
+if(!data) return;
+document.getElementById("coins").innerText=data.coins||0;
+document.getElementById("usdt").innerText=((data.coins||0)/1000).toFixed(2);
+if(document.getElementById("pRefs")){
+document.getElementById("pRefs").innerText=data.refs||0;
+}
 }
 
-// COPY REFERRAL
+// NAVIGATION
+function showHome(){
+document.getElementById("homeScreen").style.display="block";
+document.getElementById("profileScreen").style.display="none";
+document.getElementById("withdrawScreen").style.display="none";
+}
+
+function profile(){
+document.getElementById("homeScreen").style.display="none";
+document.getElementById("profileScreen").style.display="block";
+document.getElementById("withdrawScreen").style.display="none";
+document.getElementById("pUser").innerText=user;
+document.getElementById("refLink").value=location.origin+"?ref="+user;
+}
+
+function withdrawScreenShow(){
+document.getElementById("homeScreen").style.display="none";
+document.getElementById("profileScreen").style.display="none";
+document.getElementById("withdrawScreen").style.display="block";
+}
+
+// SOCIAL TASKS
+function joinTG(){
+fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
+.then(r=>r.json()).then(update);
+}
+function followTikTok(){
+fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"tiktok"})})
+.then(r=>r.json()).then(update);
+}
+function subscribeYT(){
+fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"youtube"})})
+.then(r=>r.json()).then(update);
+}
+
+// REFERRAL COPY
 function copyRef(){
-    let ref=document.getElementById("refLink");
-    ref.select();
-    ref.setSelectionRange(0,99999);
-    navigator.clipboard.writeText(ref.value)
-        .then(()=>alert("Referral link copied! ✅"))
-        .catch(()=>alert("Failed to copy!"));
+let ref=document.getElementById("refLink");
+ref.select();
+ref.setSelectionRange(0,99999);
+navigator.clipboard.writeText(ref.value)
+.then(()=>alert("Referral link copied! ✅"))
+.catch(()=>alert("Failed to copy!"));
 }
 
-// NAV
-function showHome(){document.getElementById("homeScreen").style.display="block";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="none";}
-function profile(){document.getElementById("homeScreen").style.display="none";document.getElementById("profileScreen").style.display="block";document.getElementById("withdrawScreen").style.display="none";document.getElementById("pUser").innerText=user;document.getElementById("refLink").value = location.origin + "?ref=" + user + "&app=Crypto";}
-function withdrawScreenShow(){document.getElementById("homeScreen").style.display="none";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="block";}
-
-// REAL WITHDRAW
+// WITHDRAW
 function withdraw(){
-    let amount=document.getElementById("amount").value;
-    let wallet=document.getElementById("wallet").value;
+let amount=document.getElementById("amount").value;
+let wallet=document.getElementById("wallet").value;
 
-    fetch(API+"/withdraw",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({username:user,amount,wallet})
-    }).then(r=>r.json())
-    .then(d=>{
-        if(d.success){
-            alert("✅ Withdraw successful!");
-            state.coins -= amount*1000; 
-            updateUI();
-        }else{
-            alert(d.error || "Withdraw failed!");
-        }
-    }).catch(()=>alert("Withdraw failed, backend down."));
+fetch(API+"/withdraw",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,amount,wallet})
+})
+.then(r=>r.json())
+.then(d=>alert(d.message||d.error));
 }
 
+// START
 loadUser();
 </script>
 
 </body>
-  </html>
+</html>
