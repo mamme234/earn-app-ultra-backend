@@ -3,7 +3,7 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<title>Earn Ultra</title>
+<title>Crypto</title>
 
 <style>
 body{
@@ -98,6 +98,48 @@ body{
   0%{opacity:1;}
   100%{opacity:0; transform:translateY(-60px);}
 }
+
+/* SOCIAL TASKS BUTTONS */
+.social-btn{
+  width:100%;
+  padding:12px;
+  margin:7px 0;
+  border:none;
+  border-radius:15px;
+  font-size:16px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+  box-shadow:0 0 10px rgba(255,255,255,0.2);
+}
+
+/* Telegram */
+.social-btn.tg{
+  background:linear-gradient(90deg, #0088cc, #00c6ff);
+}
+.social-btn.tg:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 20px #00c6ff;
+}
+
+/* TikTok */
+.social-btn.tiktok{
+  background:linear-gradient(90deg, #69C9D0, #EE1D52);
+}
+.social-btn.tiktok:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 20px #EE1D52;
+}
+
+/* YouTube */
+.social-btn.yt{
+  background:linear-gradient(90deg, #FF0000, #FF6347);
+}
+.social-btn.yt:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 20px #FF6347;
+}
 </style>
 </head>
 
@@ -107,7 +149,7 @@ body{
 <div id="homeScreen">
 
 <div class="card">
-  <div class="center"><b>👑 Balance</b></div>
+  <div class="center"><b>👑 Crypto Balance</b></div>
 
   <div class="row">
     <div>Level:</div>
@@ -157,17 +199,20 @@ body{
 
   <input id="refLink" style="width:100%;margin-top:10px;" readonly>
 
-  <a href="https://t.me/gangs234" target="_blank">
-  <button onclick="joinTG()">Join Telegram +500</button>
-  </a>
+  <!-- SOCIAL TASKS -->
+  <div class="social-tasks" style="margin-top:15px;">
+    <a href="https://t.me/gangs234" target="_blank">
+      <button class="social-btn tg" onclick="joinTG()">Join Telegram +500</button>
+    </a>
 
-  <a href="https://www.tiktok.com/@mammeliyas" target="_blank">
-  <button onclick="followTikTok()">Follow TikTok +1000</button>
-  </a>
+    <a href="https://www.tiktok.com/@mammeliyas" target="_blank">
+      <button class="social-btn tiktok" onclick="followTikTok()">Follow TikTok +1000</button>
+    </a>
 
-  <a href="https://www.youtube.com/@Mamme234" target="_blank">
-  <button onclick="subscribeYT()">Subscribe YouTube +500</button>
-  </a>
+    <a href="https://www.youtube.com/@Mamme234" target="_blank">
+      <button class="social-btn yt" onclick="subscribeYT()">Subscribe YouTube +500</button>
+    </a>
+  </div>
 </div>
 
 <!-- WITHDRAW -->
@@ -193,7 +238,7 @@ body{
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const API="https://node-js-dsmy.onrender.com";
+const API = "https://node-js-1-v8du.onrender.com";
 let user = tg.initDataUnsafe?.user?.username || "guest";
 
 // LOAD USER
@@ -255,7 +300,7 @@ document.getElementById("profileScreen").style.display="block";
 document.getElementById("withdrawScreen").style.display="none";
 
 document.getElementById("pUser").innerText=user;
-document.getElementById("refLink").value=location.origin+"?ref="+user;
+document.getElementById("refLink").value = location.origin + "?ref=" + user + "&app=Crypto";
 }
 
 function withdrawScreenShow(){
@@ -299,4 +344,4 @@ loadUser();
 </script>
 
 </body>
-  </html>
+</html>
