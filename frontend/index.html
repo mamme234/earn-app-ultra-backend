@@ -271,13 +271,12 @@ body{
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-const API = "https://node-js-1-v8du.onrender.com"; // backend
+const API = "https://node-js-1-v8du.onrender.com"; 
 let user = tg.initDataUnsafe?.user?.username || "guest";
 
-// State
 let state = { coins:0, level:1, refs:0 };
 
-// Load user from backend
+// LOAD USER
 function loadUser(){
     fetch(API+"/login",{
         method:"POST",
@@ -290,64 +289,58 @@ function loadUser(){
             state.refs = data.user.refs || 0;
             updateUI();
         }
-    }).catch(()=>console.log("Backend not responding. Using local state."));
+    }).catch(()=>console.log("Backend not responding."));
 }
 
 // TAP
 function tap(){
-    state.coins += 1;
-    updateUI();
+    fetch(API+"/tap",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({username:user})
+    }).then(r=>r.json())
+    .then(data=>{
+        if(data.coins !== undefined) state.coins = data.coins;
+        updateUI();
+    }).catch(()=>console.log("Tap not saved"));
 
-    // floating +1
     let plus = document.createElement("div");
     plus.innerText = "+1";
     plus.className="float";
     document.querySelector(".tap-wrap").appendChild(plus);
     setTimeout(()=>plus.remove(),1000);
-
-    fetch(API+"/tap",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({username:user})
-    }).catch(()=>console.log("Tap not sent to backend"));
 }
 
-// REAL SOCIAL TASK
+// SOCIAL TASK
 function socialTask(type){
     let url="", reward=0;
     if(type=="tg"){ url="https://t.me/gangs234"; reward=500; }
     else if(type=="tiktok"){ url="https://www.tiktok.com/@mammeliyas"; reward=1000; }
     else if(type=="yt"){ url="https://www.youtube.com/@Mamme234"; reward=500; }
 
-    // Open link
     window.open(url,"_blank");
 
-    // reward after 3 sec
     setTimeout(()=>{
-        state.coins += reward;
-        updateUI();
+        fetch(API+"/reward",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({username:user,type:type})
+        }).then(r=>r.json())
+        .then(data=>{
+            if(data.coins !== undefined) state.coins = data.coins;
+            updateUI();
+        }).catch(()=>console.log("Reward not saved"));
 
-        // floating
         let plus=document.createElement("div");
         plus.innerText="+"+reward;
         plus.className="float";
         document.querySelector("#profileScreen").appendChild(plus);
         setTimeout(()=>plus.remove(),1000);
 
-        // popup
         showTaskComplete("🎉 Task Completed! +" + reward + " coins");
-
-        // backend sync
-        fetch(API+"/reward",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({username:user,type:type})
-        }).catch(()=>console.log("Reward not sent to backend"));
-
     },3000);
 }
 
-// TASK POPUP
 function showTaskComplete(msg){
     let div = document.createElement("div");
     div.className="task-popup";
@@ -379,25 +372,11 @@ function copyRef(){
 }
 
 // NAV
-function showHome(){
-    document.getElementById("homeScreen").style.display="block";
-    document.getElementById("profileScreen").style.display="none";
-    document.getElementById("withdrawScreen").style.display="none";
-}
-function profile(){
-    document.getElementById("homeScreen").style.display="none";
-    document.getElementById("profileScreen").style.display="block";
-    document.getElementById("withdrawScreen").style.display="none";
-    document.getElementById("pUser").innerText=user;
-    document.getElementById("refLink").value = location.origin + "?ref=" + user + "&app=Crypto";
-}
-function withdrawScreenShow(){
-    document.getElementById("homeScreen").style.display="none";
-    document.getElementById("profileScreen").style.display="none";
-    document.getElementById("withdrawScreen").style.display="block";
-}
+function showHome(){document.getElementById("homeScreen").style.display="block";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="none";}
+function profile(){document.getElementById("homeScreen").style.display="none";document.getElementById("profileScreen").style.display="block";document.getElementById("withdrawScreen").style.display="none";document.getElementById("pUser").innerText=user;document.getElementById("refLink").value = location.origin + "?ref=" + user + "&app=Crypto";}
+function withdrawScreenShow(){document.getElementById("homeScreen").style.display="none";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="block";}
 
-// WITHDRAW
+// REAL WITHDRAW
 function withdraw(){
     let amount=document.getElementById("amount").value;
     let wallet=document.getElementById("wallet").value;
@@ -406,13 +385,20 @@ function withdraw(){
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({username:user,amount,wallet})
-    }).then(r=>r.json()).then(d=>alert(d.message||d.error))
-    .catch(()=>alert("Withdraw failed, backend may be down."));
+    }).then(r=>r.json())
+    .then(d=>{
+        if(d.success){
+            alert("✅ Withdraw successful!");
+            state.coins -= amount*1000; 
+            updateUI();
+        }else{
+            alert(d.error || "Withdraw failed!");
+        }
+    }).catch(()=>alert("Withdraw failed, backend down."));
 }
 
-// START
 loadUser();
 </script>
 
 </body>
-      </html>
+  </html>
