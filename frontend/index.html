@@ -28,7 +28,7 @@ body{
   box-shadow:0 0 25px rgba(255,165,0,0.2);
 }
 
-/* BALANCE */
+/* ROW */
 .row{
   display:flex;
   justify-content:space-between;
@@ -52,11 +52,8 @@ body{
   background:linear-gradient(to right, gold, orange);
 }
 
-/* COIN */
-.tap-wrap{
-  margin-top:20px;
-  position:relative;
-}
+/* TAP */
+.tap-wrap{margin-top:20px; position:relative;}
 
 .tap{
   width:180px;
@@ -69,9 +66,7 @@ body{
   box-shadow:0 0 40px gold;
 }
 
-.tap img{
-  width:100px;
-}
+.tap img{width:100px;}
 
 /* NAV */
 .nav{
@@ -109,7 +104,9 @@ body{
 
 <body>
 
-<!-- BALANCE -->
+<!-- HOME CONTENT -->
+<div id="homeScreen">
+
 <div class="card">
   <div class="center"><b>👑 Balance</b></div>
 
@@ -129,7 +126,6 @@ body{
   </div>
 </div>
 
-<!-- LEVEL -->
 <div class="card">
   <div class="center">Next Level</div>
   <div class="bar">
@@ -138,18 +134,50 @@ body{
   <div class="center">10%</div>
 </div>
 
-<!-- COIN -->
 <div class="tap-wrap">
   <div class="tap" onclick="tap()" id="tapBtn">
     <img src="https://cdn-icons-png.flaticon.com/512/138/138292.png">
   </div>
 </div>
 
+</div>
+
+<!-- PROFILE -->
+<div id="profileScreen" class="card" style="display:none;">
+  <div class="center"><b>👤 Profile</b></div>
+
+  <div class="row">
+    <div>Username:</div>
+    <div class="orange" id="pUser"></div>
+  </div>
+
+  <div class="row">
+    <div>Referrals:</div>
+    <div class="orange" id="pRefs">0</div>
+  </div>
+
+  <input id="refLink" style="width:100%;margin-top:10px;" readonly>
+
+  <button onclick="join()">Join Telegram +500</button>
+</div>
+
+<!-- WITHDRAW -->
+<div id="withdrawScreen" class="card" style="display:none;">
+  <div class="center"><b>💰 Withdraw</b></div>
+
+  <p>Need 10 referrals</p>
+
+  <input id="amount" placeholder="USDT" style="width:100%;">
+  <input id="wallet" placeholder="Wallet" style="width:100%;">
+
+  <button onclick="withdraw()">Submit</button>
+</div>
+
 <!-- NAV -->
 <div class="nav">
-  <button onclick="join()">👍 Home</button>
+  <button onclick="showHome()">👍 Home</button>
   <button onclick="profile()">👤 Profile</button>
-  <button onclick="withdraw()">📩 Withdraw</button>
+  <button onclick="withdrawScreenShow()">📩 Withdraw</button>
 </div>
 
 <script>
@@ -158,6 +186,17 @@ tg.expand();
 
 const API="https://node-js-dsmy.onrender.com";
 let user = tg.initDataUnsafe?.user?.username || "guest";
+
+// LOAD USER
+function loadUser(){
+fetch(API+"/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update);
+}
 
 // TAP
 function tap(){
@@ -174,10 +213,6 @@ let plus=document.createElement("div");
 plus.innerText="+1";
 plus.className="float";
 
-let rect=document.getElementById("tapBtn").getBoundingClientRect();
-plus.style.left="50%";
-plus.style.top="50%";
-
 document.querySelector(".tap-wrap").appendChild(plus);
 setTimeout(()=>plus.remove(),1000);
 }
@@ -185,27 +220,65 @@ setTimeout(()=>plus.remove(),1000);
 // UPDATE
 function update(data){
 if(!data) return;
+if(data.user) data=data.user;
+
 document.getElementById("coins").innerText=data.coins||0;
 document.getElementById("usdt").innerText=((data.coins||0)/100).toFixed(2);
+
+if(document.getElementById("pRefs")){
+document.getElementById("pRefs").innerText=data.refs||0;
+}
 }
 
-// SIMPLE ACTIONS
-function join(){
-fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-.then(r=>r.json()).then(update);
+// NAVIGATION
+function showHome(){
+document.getElementById("homeScreen").style.display="block";
+document.getElementById("profileScreen").style.display="none";
+document.getElementById("withdrawScreen").style.display="none";
 }
 
 function profile(){
-alert("Profile coming soon");
+document.getElementById("homeScreen").style.display="none";
+document.getElementById("profileScreen").style.display="block";
+document.getElementById("withdrawScreen").style.display="none";
+
+document.getElementById("pUser").innerText=user;
+document.getElementById("refLink").value=location.origin+"?ref="+user;
+}
+
+function withdrawScreenShow(){
+document.getElementById("homeScreen").style.display="none";
+document.getElementById("profileScreen").style.display="none";
+document.getElementById("withdrawScreen").style.display="block";
+}
+
+// ACTIONS
+function join(){
+fetch(API+"/join-telegram",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update);
 }
 
 function withdraw(){
-let amount=prompt("Amount?");
-let wallet=prompt("Wallet?");
-fetch(API+"/withdraw",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,amount,wallet})})
-.then(r=>r.json()).then(d=>alert(d.message||d.error));
+let amount=document.getElementById("amount").value;
+let wallet=document.getElementById("wallet").value;
+
+fetch(API+"/withdraw",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,amount,wallet})
+})
+.then(r=>r.json())
+.then(d=>alert(d.message||d.error));
 }
+
+// START
+loadUser();
 </script>
 
 </body>
-    </html>
+  </html>
