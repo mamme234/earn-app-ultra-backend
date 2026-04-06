@@ -1,136 +1,167 @@
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Earn App Ultra</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Earn Ultra</title>
 
 <style>
-body{margin:0;background:#0f0f0f;color:white;text-align:center;font-family:sans-serif;}
-.screen{display:none;padding:20px;}
-.active{display:block;}
-.nav{position:fixed;bottom:0;width:100%;background:#111;}
-button{padding:10px;margin:5px;border:none;border-radius:10px;background:#00ffcc;color:black;}
-input{padding:10px;margin:5px;border-radius:5px;border:none;}
-.tap{width:130px;height:130px;background:gold;border-radius:50%;margin:auto;font-size:30px;display:flex;align-items:center;justify-content:center;}
-</style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0b0b0b;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
 
+/* CARD */
+.card{
+  width:90%;
+  max-width:400px;
+  margin-top:15px;
+  padding:15px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+  box-shadow:0 0 25px rgba(255,165,0,0.2);
+}
+
+/* BALANCE */
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin:5px 0;
+}
+
+.orange{color:#ffb347;}
+.center{text-align:center;}
+
+/* PROGRESS */
+.bar{
+  width:100%;
+  height:10px;
+  background:#222;
+  border-radius:10px;
+  overflow:hidden;
+}
+.fill{
+  width:10%;
+  height:100%;
+  background:linear-gradient(to right, gold, orange);
+}
+
+/* COIN */
+.tap-wrap{
+  margin-top:20px;
+  position:relative;
+}
+
+.tap{
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  background:radial-gradient(circle, #ffcc00, #b8860b);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 40px gold;
+}
+
+.tap img{
+  width:100px;
+}
+
+/* NAV */
+.nav{
+  position:fixed;
+  bottom:10px;
+  width:95%;
+  max-width:400px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.nav button{
+  flex:1;
+  margin:5px;
+  padding:12px;
+  border:none;
+  border-radius:15px;
+  background:#111;
+  color:#ffb347;
+  font-size:16px;
+}
+
+/* FLOAT */
+.float{
+  position:absolute;
+  color:gold;
+  animation:up 1s forwards;
+}
+@keyframes up{
+  0%{opacity:1;}
+  100%{opacity:0; transform:translateY(-60px);}
+}
+</style>
 </head>
+
 <body>
 
-<!-- LOCK -->
-<div id="lock" class="screen active">
-<h2>🔒 Subscribe to Enter</h2>
-<a href="https://www.youtube.com/@Mamme234" target="_blank">
-<button>Subscribe YouTube</button>
-</a>
-<br>
-<button onclick="unlock()">Unlock</button>
+<!-- BALANCE -->
+<div class="card">
+  <div class="center"><b>👑 Balance</b></div>
+
+  <div class="row">
+    <div>Level:</div>
+    <div class="orange">1</div>
+  </div>
+
+  <div class="row">
+    <div>Coins:</div>
+    <div class="orange" id="coins">0</div>
+  </div>
+
+  <div class="row">
+    <div>USDT:</div>
+    <div class="orange" id="usdt">0.00</div>
+  </div>
 </div>
 
-<!-- LOGIN -->
-<div id="login" class="screen">
-<h2>Login</h2>
-<input id="username" placeholder="Username"><br>
-<button onclick="login()">Start</button>
+<!-- LEVEL -->
+<div class="card">
+  <div class="center">Next Level</div>
+  <div class="bar">
+    <div class="fill"></div>
+  </div>
+  <div class="center">10%</div>
 </div>
 
-<!-- HOME -->
-<div id="home" class="screen">
-<h2>Home</h2>
-<p>Coins: <span id="coins">0</span></p>
-<p>USDT: <span id="usdt">0</span></p>
-
-<div class="tap" onclick="tap()">💰</div>
-
-<button onclick="spin()">Spin</button>
-<button onclick="daily()">Daily</button>
-</div>
-
-<!-- PROFILE -->
-<div id="profile" class="screen">
-<h2>Profile</h2>
-
-<p>Referrals: <span id="refs">0</span></p>
-<input id="refLink" readonly>
-
-<a href="https://t.me/gangs234" target="_blank">
-<button onclick="joinTelegram()">Join Telegram +500</button>
-</a>
-
-</div>
-
-<!-- WITHDRAW -->
-<div id="withdraw" class="screen">
-<h2>Withdraw</h2>
-<p>⚠️ Need 10 referrals</p>
-<input id="amount" placeholder="USDT"><br>
-<input id="wallet" placeholder="Wallet"><br>
-<button onclick="withdraw()">Withdraw</button>
+<!-- COIN -->
+<div class="tap-wrap">
+  <div class="tap" onclick="tap()" id="tapBtn">
+    <img src="https://cdn-icons-png.flaticon.com/512/138/138292.png">
+  </div>
 </div>
 
 <!-- NAV -->
 <div class="nav">
-<button onclick="show('home')">Home</button>
-<button onclick="show('profile')">Profile</button>
-<button onclick="show('withdraw')">Withdraw</button>
+  <button onclick="join()">👍 Home</button>
+  <button onclick="profile()">👤 Profile</button>
+  <button onclick="withdraw()">📩 Withdraw</button>
 </div>
 
 <script>
+const tg = window.Telegram.WebApp;
+tg.expand();
+
 const API="https://node-js-dsmy.onrender.com";
-
-let user="";
-let unlocked=false;
-
-// REF
-const params=new URLSearchParams(window.location.search);
-const ref=params.get("ref");
-
-// NAV
-function show(s){
-document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
-document.getElementById(s).classList.add('active');
-}
-
-// LOCK
-function unlock(){
-unlocked=true;
-show('login');
-}
-
-// LOGIN
-function login(){
-if(!unlocked) return alert("Subscribe first");
-
-user=document.getElementById("username").value.trim();
-if(!user) return alert("Enter username");
-
-fetch(API+"/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user,ref})
-})
-.then(r=>r.json())
-.then(d=>{
-update(d);
-document.getElementById("refLink").value=location.origin+"?ref="+user;
-show('home');
-});
-}
-
-// CHECK USER
-function checkUser(){
-if(!user){
-alert("Login first");
-show('login');
-return false;
-}
-return true;
-}
+let user = tg.initDataUnsafe?.user?.username || "guest";
 
 // TAP
 function tap(){
-if(!checkUser()) return;
-
 fetch(API+"/tap",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -138,69 +169,18 @@ body:JSON.stringify({username:user})
 })
 .then(r=>r.json())
 .then(update);
-}
 
-// DAILY
-function daily(){
-if(!checkUser()) return;
+// effect
+let plus=document.createElement("div");
+plus.innerText="+1";
+plus.className="float";
 
-fetch(API+"/daily",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user})
-})
-.then(r=>r.json())
-.then(d=>{
-alert(d.message);
-if(d.user) update(d.user);
-});
-}
+let rect=document.getElementById("tapBtn").getBoundingClientRect();
+plus.style.left="50%";
+plus.style.top="50%";
 
-// SPIN
-function spin(){
-if(!checkUser()) return;
-
-fetch(API+"/spin",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user})
-})
-.then(r=>r.json())
-.then(d=>{
-alert("Win "+d.win);
-update(d.user);
-});
-}
-
-// TELEGRAM
-function joinTelegram(){
-if(!checkUser()) return;
-
-fetch(API+"/join-telegram",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user})
-})
-.then(r=>r.json())
-.then(update);
-}
-
-// WITHDRAW
-function withdraw(){
-if(!checkUser()) return;
-
-let amount=document.getElementById("amount").value;
-let wallet=document.getElementById("wallet").value;
-
-if(!amount||!wallet) return alert("Fill all");
-
-fetch(API+"/withdraw",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user,amount,wallet})
-})
-.then(r=>r.json())
-.then(d=>alert(d.message||d.error));
+document.querySelector(".tap-wrap").appendChild(plus);
+setTimeout(()=>plus.remove(),1000);
 }
 
 // UPDATE
@@ -208,9 +188,25 @@ function update(data){
 if(!data) return;
 document.getElementById("coins").innerText=data.coins||0;
 document.getElementById("usdt").innerText=((data.coins||0)/100).toFixed(2);
-document.getElementById("refs").innerText=data.refs||0;
+}
+
+// SIMPLE ACTIONS
+function join(){
+fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
+.then(r=>r.json()).then(update);
+}
+
+function profile(){
+alert("Profile coming soon");
+}
+
+function withdraw(){
+let amount=prompt("Amount?");
+let wallet=prompt("Wallet?");
+fetch(API+"/withdraw",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,amount,wallet})})
+.then(r=>r.json()).then(d=>alert(d.message||d.error));
 }
 </script>
 
 </body>
-  </html>
+</html>
