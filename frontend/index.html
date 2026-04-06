@@ -260,7 +260,7 @@ tg.expand();
 const API = "https://node-js-1-v8du.onrender.com"; // your backend
 let user = tg.initDataUnsafe?.user?.username || "guest";
 
-// Local frontend state to ensure it always works
+// Local frontend state
 let state = {
     coins: 0,
     level: 1,
@@ -269,7 +269,6 @@ let state = {
 
 // LOAD USER
 function loadUser(){
-    // try backend
     fetch(API+"/login",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -287,16 +286,17 @@ function loadUser(){
 
 // TAP FUNCTION
 function tap(){
-    state.coins += 1;
+    state.coins += 1; // 1 coin per tap
     updateUI();
 
-    let plus=document.createElement("div");
-    plus.innerText="+1";
-    plus.className="float";
+    // floating +1 animation
+    let plus = document.createElement("div");
+    plus.innerText = "+1";
+    plus.className = "float";
     document.querySelector(".tap-wrap").appendChild(plus);
-    setTimeout(()=>plus.remove(),1000);
+    setTimeout(() => plus.remove(), 1000);
 
-    // send backend
+    // backend sync
     fetch(API+"/tap",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -314,14 +314,12 @@ function socialTask(type){
     state.coins += reward;
     updateUI();
 
-    // floating effect
     let plus=document.createElement("div");
     plus.innerText="+"+reward;
     plus.className="float";
     document.querySelector("#profileScreen").appendChild(plus);
     setTimeout(()=>plus.remove(),1000);
 
-    // send backend
     fetch(API+"/reward",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -331,14 +329,25 @@ function socialTask(type){
 
 // UPDATE UI
 function updateUI(){
-    document.getElementById("coins").innerText = state.coins;
-    document.getElementById("usdt").innerText = (state.coins/100).toFixed(2);
-    document.getElementById("pRefs").innerText = state.refs;
-    document.getElementById("level").innerText = state.level;
+    // Level calculation (1 level per 10000 coins)
+    state.level = Math.floor(state.coins / 10000) + 1;
 
-    let progress = Math.min((state.coins % 100), 100);
+    // Progress to next level
+    let progress = (state.coins % 10000) / 10000 * 100;
     document.getElementById("progress").style.width = progress + "%";
-    document.getElementById("progressText").innerText = progress + "%";
+    document.getElementById("progressText").innerText = Math.floor(progress) + "%";
+
+    // Coins display
+    document.getElementById("coins").innerText = state.coins;
+
+    // USDT display (1000 coins = 1 USDT)
+    document.getElementById("usdt").innerText = (state.coins / 1000).toFixed(2);
+
+    // Referral display
+    document.getElementById("pRefs").innerText = state.refs;
+
+    // Level display
+    document.getElementById("level").innerText = state.level;
 }
 
 // REFERRAL COPY
@@ -351,7 +360,7 @@ function copyRef(){
         .catch(()=>alert("Failed to copy!"));
 }
 
-// NAV
+// NAVIGATION
 function showHome(){
     document.getElementById("homeScreen").style.display="block";
     document.getElementById("profileScreen").style.display="none";
@@ -391,4 +400,4 @@ loadUser();
 </script>
 
 </body>
-    </html>
+  </html>
