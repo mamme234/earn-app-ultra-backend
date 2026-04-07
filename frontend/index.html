@@ -6,152 +6,211 @@
 <title>Crypto</title>
 
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#0b0b0b;
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
+body{margin:0;font-family:sans-serif;background:#0b0b0b;color:#fff;display:flex;flex-direction:column;align-items:center;}
 
-.card{
-  width:90%;
-  max-width:400px;
-  margin-top:15px;
-  padding:15px;
-  border-radius:20px;
-  background:rgba(255,255,255,0.05);
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-}
-
+/* CARD */
+.card{width:90%;max-width:400px;margin-top:15px;padding:15px;border-radius:20px;background:rgba(255,255,255,0.05);backdrop-filter:blur(10px);box-shadow:0 0 25px rgba(255,165,0,0.2);}
+.row{display:flex;justify-content:space-between;margin:5px 0;}
 .orange{color:#ffb347;}
+.center{text-align:center;}
+.bar{width:100%;height:10px;background:#222;border-radius:10px;}
+.fill{width:10%;height:100%;background:linear-gradient(to right, gold, orange);}
+.tap-wrap{margin-top:20px;position:relative;}
+.tap{width:180px;height:180px;border-radius:50%;background:radial-gradient(circle, #ffcc00, #b8860b);display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px gold;}
+.tap img{width:100px;}
+.nav{position:fixed;bottom:10px;width:95%;max-width:400px;display:flex;justify-content:space-between;}
+.nav button{flex:1;margin:5px;padding:12px;border:none;border-radius:15px;background:#111;color:#ffb347;font-size:16px;}
+.float{position:absolute;color:gold;animation:up 1s forwards;}
+@keyframes up{0%{opacity:1;}100%{opacity:0;transform:translateY(-60px);}}
 
-.tap{
-  width:180px;
-  height:180px;
-  border-radius:50%;
-  background:gold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-top:20px;
-}
+/* SOCIAL BUTTONS */
+.social-btn{width:100%;padding:12px;margin:7px 0;border:none;border-radius:15px;font-size:16px;color:#fff;font-weight:bold;cursor:pointer;transition:0.3s;box-shadow:0 0 10px rgba(255,255,255,0.2);}
+.social-btn.tg{background:linear-gradient(90deg,#0088cc,#00c6ff);}
+.social-btn.tg:hover{transform:scale(1.05);box-shadow:0 0 20px #00c6ff;}
+.social-btn.tiktok{background:linear-gradient(90deg,#69C9D0,#EE1D52);}
+.social-btn.tiktok:hover{transform:scale(1.05);box-shadow:0 0 20px #EE1D52;}
+.social-btn.yt{background:linear-gradient(90deg,#FF0000,#FF6347);}
+.social-btn.yt:hover{transform:scale(1.05);box-shadow:0 0 20px #FF6347;}
 
-.nav{
-  position:fixed;
-  bottom:10px;
-  width:95%;
-  display:flex;
-}
-
-.nav button{
-  flex:1;
-  margin:5px;
-  padding:10px;
-}
-
+/* REFERRAL */
+#refLink{width:80%;padding:8px;border-radius:10px;border:none;text-align:center;background: rgba(255, 215, 0, 0.2);color:#fff;font-weight:bold;border: 2px dashed gold;margin-right:2%;}
+.copy-btn{width:18%;padding:8px;border-radius:10px;background:gold;color:#000;font-weight:bold;cursor:pointer;}
 </style>
 </head>
 
 <body>
-
+<!-- HOME -->
 <div id="homeScreen">
 <div class="card">
-<div>Coins: <span id="coins">0</span></div>
-<div>USDT: <span id="usdt">0.00</span></div>
+  <div class="center"><b>👑 Crypto Balance</b></div>
+  <div class="row"><div>Level:</div><div class="orange" id="level">1</div></div>
+  <div class="row"><div>Coins:</div><div class="orange" id="coins">0</div></div>
+  <div class="row"><div>USDT:</div><div class="orange" id="usdt">0.00</div></div>
 </div>
 
-<div class="tap" onclick="tap()">TAP</div>
+<div class="card">
+  <div class="center">Next Level</div>
+  <div class="bar"><div class="fill" id="progress"></div></div>
+  <div class="center" id="progressText">0%</div>
 </div>
 
-<div id="profileScreen" style="display:none;">
-<div>Username: <span id="pUser"></span></div>
-<div>Refs: <span id="pRefs">0</span></div>
-<input id="refLink" readonly>
-<button onclick="copyRef()">Copy</button>
-
-<button onclick="joinTG()">Telegram +500</button>
-<button onclick="followTikTok()">TikTok +1000</button>
-<button onclick="subscribeYT()">YouTube +500</button>
+<div class="tap-wrap">
+  <div class="tap" onclick="tap()" id="tapBtn">
+    <img src="https://cdn-icons-png.flaticon.com/512/138/138292.png">
+  </div>
 </div>
 
+<div class="card">
+  <button onclick="showRightMenu()" style="width:100%;padding:12px;border-radius:15px;background:#111;color:#ffb347;font-size:16px;">☰ Menu</button>
+  <div id="rightMenu" style="display:none;margin-top:10px;">
+    <button onclick="showDeposit()" class="social-btn tg">💳 Deposit</button>
+    <button onclick="showHelp()" class="social-btn tiktok">❓ Help</button>
+    <button onclick="showFeedback()" class="social-btn yt">📝 Feedback</button>
+    <button onclick="showAbout()" class="social-btn tg">ℹ️ About</button>
+  </div>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div id="profileScreen" class="card" style="display:none;">
+  <div class="center"><b>👤 Profile</b></div>
+  <div class="row"><div>Username:</div><div class="orange" id="pUser"></div></div>
+  <div class="row"><div>Referrals:</div><div class="orange" id="pRefs">0</div></div>
+  <div style="margin-top:10px; display:flex;">
+    <input id="refLink" readonly>
+    <button class="copy-btn" onclick="copyRef()">Copy</button>
+  </div>
+  <div class="social-tasks" style="margin-top:15px;">
+    <button class="social-btn tg" onclick="socialTask('tg')">Join Telegram +500</button>
+    <button class="social-btn tiktok" onclick="socialTask('tiktok')">Follow TikTok +1000</button>
+    <button class="social-btn yt" onclick="socialTask('yt')">Subscribe YouTube +500</button>
+  </div>
+</div>
+
+<!-- DEPOSIT -->
+<div id="depositScreen" class="card" style="display:none;">
+  <div class="center"><b>💳 Deposit</b></div>
+  <input id="depositAmount" placeholder="Enter USDT" style="width:100%;margin:10px 0;">
+  <button onclick="deposit()" class="social-btn tg">Deposit Now</button>
+  <button onclick="backHome()" style="width:100%;margin-top:10px;padding:12px;border-radius:15px;background:#111;color:#ffb347;">Back</button>
+</div>
+
+<!-- WITHDRAW -->
+<div id="withdrawScreen" class="card" style="display:none;">
+  <div class="center"><b>💰 Withdraw</b></div>
+  <p id="withdrawInfo">Need 10 referrals & 20 USDT minimum to withdraw</p>
+  <input id="amount" placeholder="USDT" style="width:100%;">
+  <input id="wallet" placeholder="Wallet" style="width:100%;">
+  <button onclick="withdraw()">Submit</button>
+</div>
+
+<!-- NAV -->
 <div class="nav">
-<button onclick="home()">Home</button>
-<button onclick="profile()">Profile</button>
+  <button onclick="showHome()">👍 Home</button>
+  <button onclick="profile()">👤 Profile</button>
+  <button onclick="withdrawScreenShow()">📩 Withdraw</button>
 </div>
 
 <script>
-const API="https://node-js-1-v8du.onrender.com";
-let user="guest";
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-let ref = new URLSearchParams(window.location.search).get("ref");
+const API="https://my-app-6v0n.onrender.com";
+let user = tg.initDataUnsafe?.user?.username || "guest";
+let state={coins:0,level:1,refs:0,deposit:0};
 
-function load(){
-fetch(API+"/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user,ref:ref})
-})
+// LOAD USER
+function loadUser(){
+fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
 .then(r=>r.json())
-.then(update);
+.then(d=>{
+  if(d.user){
+    state=d.user;
+    updateUI();
+  }
+});
 }
 
+// TAP
 function tap(){
-fetch(API+"/tap",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user})
-})
-.then(r=>r.json())
-.then(update);
+state.coins+=1;
+updateUI();
+let plus=document.createElement("div");
+plus.innerText="+1";
+plus.className="float";
+document.querySelector(".tap-wrap").appendChild(plus);
+setTimeout(()=>plus.remove(),1000);
+
+fetch(API+"/tap",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})});
 }
 
-function update(data){
-document.getElementById("coins").innerText=data.coins;
-document.getElementById("usdt").innerText=(data.coins/100).toFixed(2);
-document.getElementById("pRefs").innerText=data.refs;
+// SOCIAL TASK
+function socialTask(type){
+fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:type})})
+.then(r=>r.json()).then(d=>{
+  state=d.user; updateUI();
+  let plus=document.createElement("div");
+  plus.innerText=type==="tg"?"+500":type==="tiktok"?"+1000":"+500";
+  plus.className="float";
+  document.querySelector("#profileScreen").appendChild(plus);
+  setTimeout(()=>plus.remove(),1000);
+});
 }
 
-function profile(){
-document.getElementById("homeScreen").style.display="none";
-document.getElementById("profileScreen").style.display="block";
-document.getElementById("pUser").innerText=user;
-document.getElementById("refLink").value=location.origin+"?ref="+user;
-}
-
-function home(){
-document.getElementById("homeScreen").style.display="block";
-document.getElementById("profileScreen").style.display="none";
-}
-
-function joinTG(){
-fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
-.then(r=>r.json()).then(update);
-}
-
-function followTikTok(){
-fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"tiktok"})})
-.then(r=>r.json()).then(update);
-}
-
-function subscribeYT(){
-fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"youtube"})})
-.then(r=>r.json()).then(update);
-}
-
+// REFERRAL
 function copyRef(){
-navigator.clipboard.writeText(document.getElementById("refLink").value);
-alert("Copied");
+let ref=document.getElementById("refLink");
+ref.select();
+ref.setSelectionRange(0,99999);
+navigator.clipboard.writeText(ref.value).then(()=>alert("Referral link copied! ✅"));
 }
 
-load();
-</script>
+// UPDATE UI
+function updateUI(){
+document.getElementById("coins").innerText=state.coins;
+document.getElementById("usdt").innerText=(state.coins/100).toFixed(2);
+document.getElementById("level").innerText=state.level;
+document.getElementById("pRefs").innerText=state.refs;
 
+if(state.deposit>0 && state.refs<5){document.getElementById("withdrawInfo").innerText=`You deposit ${state.deposit} USDT: Need 5 Referrals & Level 5`;}
+else{document.getElementById("withdrawInfo").innerText="Need 10 referrals & 20 USDT minimum to withdraw";}
+
+let progress=Math.min((state.coins%100),100);
+document.getElementById("progress").style.width=progress+"%";
+document.getElementById("progressText").innerText=progress+"%";
+}
+
+// NAVIGATION
+function showHome(){document.getElementById("homeScreen").style.display="block";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="none";}
+function profile(){document.getElementById("homeScreen").style.display="none";document.getElementById("profileScreen").style.display="block";document.getElementById("withdrawScreen").style.display="none";document.getElementById("pUser").innerText=user;document.getElementById("refLink").value=location.origin+"?ref="+user+"&app=Crypto";}
+function withdrawScreenShow(){document.getElementById("homeScreen").style.display="none";document.getElementById("profileScreen").style.display="none";document.getElementById("withdrawScreen").style.display="block";}
+function showRightMenu(){let m=document.getElementById("rightMenu");m.style.display=m.style.display==="none"?"block":"none";}
+function showDeposit(){document.getElementById("depositScreen").style.display="block";document.getElementById("homeScreen").style.display="none";}
+function showHelp(){alert("Help: Contact admin")};
+function showFeedback(){alert("Feedback: Send message to admin")};
+function showAbout(){alert("About: Crypto App v1.0")};
+function backHome(){document.getElementById("depositScreen").style.display="none";document.getElementById("homeScreen").style.display="block";}
+
+// DEPOSIT
+function deposit(){
+let amount=document.getElementById("depositAmount").value;
+fetch(API+"/deposit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,amount:amount})})
+.then(r=>r.json()).then(d=>{
+state.deposit=d.user.deposit; updateUI(); alert(d.message);
+backHome();
+});
+}
+
+// WITHDRAW
+function withdraw(){
+let amount=document.getElementById("amount").value;
+let wallet=document.getElementById("wallet").value;
+fetch(API+"/withdraw",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,user,amount,wallet})})
+.then(r=>r.json()).then(d=>alert(d.error||d.message));
+}
+
+// START
+loadUser();
+</script>
 </body>
   </html>
