@@ -3,194 +3,155 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<title>Earn Ultra</title>
+<title>Crypto</title>
+
 <style>
-body{margin:0;font-family:sans-serif;background:#0b0b0b;color:#fff;text-align:center;}
-.card{background:#111;margin:10px;padding:15px;border-radius:15px;}
-.row{display:flex;justify-content:space-between;margin:5px 0;}
-.orange{color:orange;}
-.tap{
-  width:160px;height:160px;background:gold;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;margin:20px auto;font-size:22px;font-weight:bold;
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0b0b0b;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
-.nav{position:fixed;bottom:0;width:100%;display:flex;}
-.nav button{flex:1;padding:12px;background:#111;color:#fff;border:none;}
-.float{position:absolute;color:gold;animation:up 1s forwards;}
-@keyframes up{100%{transform:translateY(-60px);opacity:0;}}
-.social-btn{width:100%;padding:12px;margin:6px 0;border:none;border-radius:12px;color:#fff;font-weight:bold;}
-.tg{background:#0088cc;}
-.tiktok{background:#ff0050;}
-.yt{background:red;}
-#refBox{display:flex;margin-top:10px;}
-#refLink{flex:1;padding:8px;border-radius:10px;border:none;text-align:center;background:#222;color:#fff;}
-.copy-btn{padding:8px;background:gold;border:none;border-radius:10px;margin-left:5px;}
+
+.card{
+  width:90%;
+  max-width:400px;
+  margin-top:15px;
+  padding:15px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.05);
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+}
+
+.orange{color:#ffb347;}
+
+.tap{
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  background:gold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:20px;
+}
+
+.nav{
+  position:fixed;
+  bottom:10px;
+  width:95%;
+  display:flex;
+}
+
+.nav button{
+  flex:1;
+  margin:5px;
+  padding:10px;
+}
+
 </style>
 </head>
+
 <body>
 
-<!-- HOME -->
-<div id="home">
-  <div class="card">
-    <div class="row"><span>Level</span><span id="level">1</span></div>
-    <div class="row"><span>Coins</span><span id="coins">0</span></div>
-    <div class="row"><span>USDT</span><span id="usdt">0.00</span></div>
-  </div>
-  <div class="tap" onclick="tap()">TAP</div>
+<div id="homeScreen">
+<div class="card">
+<div>Coins: <span id="coins">0</span></div>
+<div>USDT: <span id="usdt">0.00</span></div>
 </div>
 
-<!-- PROFILE -->
-<div id="profile" style="display:none;">
-  <div class="card">
-    <div>👤 <span id="username"></span></div>
-    <div>Referrals: <span id="refs">0</span></div>
-    <div id="refBox">
-      <input id="refLink" readonly>
-      <button class="copy-btn" onclick="copyRef()">Copy</button>
-    </div>
-    <button onclick="shareRef()">🚀 Invite Friends</button>
-    <button class="social-btn tg" onclick="joinTG()">Join Telegram +500</button>
-    <button class="social-btn tiktok" onclick="followTikTok()">Follow TikTok +1000</button>
-    <button class="social-btn yt" onclick="subscribeYT()">Subscribe YouTube +500</button>
-  </div>
+<div class="tap" onclick="tap()">TAP</div>
 </div>
 
-<!-- WITHDRAW -->
-<div id="withdraw" style="display:none;">
-  <div class="card">
-    <input id="amount" placeholder="USDT">
-    <input id="wallet" placeholder="Wallet">
-    <button onclick="withdrawNow()">Withdraw</button>
-  </div>
+<div id="profileScreen" style="display:none;">
+<div>Username: <span id="pUser"></span></div>
+<div>Refs: <span id="pRefs">0</span></div>
+<input id="refLink" readonly>
+<button onclick="copyRef()">Copy</button>
+
+<button onclick="joinTG()">Telegram +500</button>
+<button onclick="followTikTok()">TikTok +1000</button>
+<button onclick="subscribeYT()">YouTube +500</button>
 </div>
 
-<!-- NAV -->
 <div class="nav">
-  <button onclick="show('home')">Home</button>
-  <button onclick="show('profile')">Profile</button>
-  <button onclick="show('withdraw')">Withdraw</button>
+<button onclick="home()">Home</button>
+<button onclick="profile()">Profile</button>
 </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.expand();
-const API = "https://node-js-1-v8du.onrender.com";
+const API="https://node-js-1-v8du.onrender.com";
+let user="guest";
 
-// TELEGRAM USER
-let user = tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.id || "guest";
+let ref = new URLSearchParams(window.location.search).get("ref");
 
-// LOAD USER
-function loadUser(){
-  let ref = new URLSearchParams(location.search).get("ref");
-  fetch(API + "/login", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ username: user, ref })
-  })
-  .then(res => res.json())
-  .then(data => update(data))
-  .catch(() => alert("Server error"));
+function load(){
+fetch(API+"/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,ref:ref})
+})
+.then(r=>r.json())
+.then(update);
 }
 
-// TAP
 function tap(){
-  fetch(API + "/tap", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ username: user })
-  })
-  .then(res=>res.json())
-  .then(data=>update(data))
-  .catch(()=>alert("Tap error"));
-
-  let plus=document.createElement("div");
-  plus.innerText="+1";
-  plus.className="float";
-  document.body.appendChild(plus);
-  setTimeout(()=>plus.remove(),1000);
+fetch(API+"/tap",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user})
+})
+.then(r=>r.json())
+.then(update);
 }
 
-// UPDATE
 function update(data){
-  if(!data) return;
-  let d = data.user ? data.user : data;
-  let coins = Number(d.coins || 0);
-  document.getElementById("coins").innerText = coins;
-  document.getElementById("usdt").innerText = (coins/1000).toFixed(2);
-  let level = Math.floor(coins/10000) + 1;
-  document.getElementById("level").innerText = level;
-  document.getElementById("refs").innerText = d.refs || 0;
-  document.getElementById("username").innerText = user;
-  document.getElementById("refLink").value = location.origin + "?ref=" + user;
+document.getElementById("coins").innerText=data.coins;
+document.getElementById("usdt").innerText=(data.coins/100).toFixed(2);
+document.getElementById("pRefs").innerText=data.refs;
 }
 
-// NAVIGATION
-function show(x){
-  document.getElementById("home").style.display="none";
-  document.getElementById("profile").style.display="none";
-  document.getElementById("withdraw").style.display="none";
-  document.getElementById(x).style.display="block";
+function profile(){
+document.getElementById("homeScreen").style.display="none";
+document.getElementById("profileScreen").style.display="block";
+document.getElementById("pUser").innerText=user;
+document.getElementById("refLink").value=location.origin+"?ref="+user;
 }
 
-// SOCIAL TASKS
+function home(){
+document.getElementById("homeScreen").style.display="block";
+document.getElementById("profileScreen").style.display="none";
+}
+
 function joinTG(){
-  fetch(API + "/join-telegram", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ username: user })
-  })
-  .then(res=>res.json())
-  .then(data=>update(data))
-  .catch(()=>alert("Telegram error"));
+fetch(API+"/join-telegram",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user})})
+.then(r=>r.json()).then(update);
 }
 
 function followTikTok(){
-  fetch(API + "/reward", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ username: user, type:"tiktok" })
-  })
-  .then(res=>res.json())
-  .then(data=>update(data))
-  .catch(()=>alert("TikTok error"));
+fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"tiktok"})})
+.then(r=>r.json()).then(update);
 }
 
 function subscribeYT(){
-  fetch(API + "/reward", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ username: user, type:"youtube" })
-  })
-  .then(res=>res.json())
-  .then(data=>update(data))
-  .catch(()=>alert("YouTube error"));
+fetch(API+"/reward",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,type:"youtube"})})
+.then(r=>r.json()).then(update);
 }
 
-// REFERRAL
 function copyRef(){
-  navigator.clipboard.writeText(document.getElementById("refLink").value);
-  alert("Copied!");
-}
-function shareRef(){
-  let link = document.getElementById("refLink").value;
-  if(navigator.share){navigator.share({text:"🔥 Earn free USDT",url:link});}
-  else copyRef();
+navigator.clipboard.writeText(document.getElementById("refLink").value);
+alert("Copied");
 }
 
-// WITHDRAW
-function withdrawNow(){
-  let amount=document.getElementById("amount").value;
-  let wallet=document.getElementById("wallet").value;
-  fetch(API + "/withdraw", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ username: user, amount, wallet })
-  })
-  .then(res=>res.json())
-  .then(d=>alert(d.message||d.error));
-}
-
-// START
-loadUser();
+load();
 </script>
+
 </body>
-</html>
+  </html>
