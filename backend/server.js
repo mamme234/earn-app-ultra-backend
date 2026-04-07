@@ -1,142 +1,150 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// CONNECT DB
+// ✅ CONNECT MONGO
 mongoose.connect(process.env.MONGO_URI)
 .then(()=>console.log("DB Connected"))
-.catch(err=>console.log(err));
+.catch(err=>console.log("DB Error:",err));
 
-// MODEL
+// ✅ USER MODEL
 const User = mongoose.model("User",{
-  username: String,
-  coins: { type:Number, default:0 },
-  refs: { type:Number, default:0 },
-
-  telegram: { type:Boolean, default:false },
-  tiktok: { type:Boolean, default:false },
-  youtube: { type:Boolean, default:false },
-
-  referredBy: { type:String, default:null }
+  username: {type:String, unique:true},
+  coins: {type:Number, default:0},
+  refs: {type:Number, default:0},
+  deposit: {type:Number, default:0},
+  level: {type:Number, default:1},
+  telegram: {type:Boolean, default:false},
+  tiktok: {type:Boolean, default:false},
+  youtube: {type:Boolean, default:false}
 });
 
-// TEST
-app.get("/",(req,res)=>res.send("Server running"));
+// ✅ TEST ROUTE
+app.get("/", (req,res)=>{
+  res.send("Server is running");
+});
 
 // LOGIN + REFERRAL
 app.post("/login", async (req,res)=>{
-try{
-  let {username, ref} = req.body;
+  try{
+    let {username, ref} = req.body;
+    let user = await User.findOne({username});
 
-  let user = await User.findOne({username});
+    if(!user){
+      user = new User({username});
+      await user.save();
 
-  if(!user){
-    user = new User({username});
-
-    if(ref && ref !== username){
-      let refUser = await User.findOne({username:ref});
-      if(refUser){
-        refUser.refs += 1;
-        refUser.coins += 100;
-        await refUser.save();
-
-        user.referredBy = ref;
-        user.coins += 100;
+      // Add referral to referrer
+      if(ref){
+        let refUser = await User.findOne({username:ref});
+        if(refUser){
+          refUser.refs += 1;
+          await refUser.save();
+        }
       }
     }
 
-    await user.save();
+    res.json({user});
+  }catch(e){
+    console.log(e);
+    res.status(500).json({error:"login error"});
   }
-
-  res.json(user);
-}catch(e){
-  res.status(500).json({error:"login error"});
-}
 });
 
 // TAP
 app.post("/tap", async (req,res)=>{
-try{
-  let user = await User.findOne({username:req.body.username});
-  if(!user) return res.json({error:"No user"});
+  try{
+    let user = await User.findOne({username:req.body.username});
+    if(!user) return res.json({error:"No user"});
 
-  user.coins += 1;
-  await user.save();
-
-  res.json(user);
-}catch{
-  res.status(500).json({error:"tap error"});
-}
+    user.coins += 1;
+    await user.save();
+    res.json({coins:user.coins});
+  }catch(e){
+    console.log(e);
+    res.status(500).json({error:"tap error"});
+  }
 });
 
-// TELEGRAM
-app.post("/join-telegram", async (req,res)=>{
-try{
-  let user = await User.findOne({username:req.body.username});
-
-  if(user.telegram) return res.json(user);
-
-  user.telegram = true;
-  user.coins += 500;
-
-  await user.save();
-  res.json(user);
-}catch{
-  res.status(500).json({error:"tg error"});
-}
-});
-
-// REWARD
+// SOCIAL TASK REWARD
 app.post("/reward", async (req,res)=>{
-try{
-  let {username,type} = req.body;
-  let user = await User.findOne({username});
+  try{
+    let {username,type} = req.body;
+    let user = await User.findOne({username});
+    if(!user) return res.json({error:"No user"});
 
-  if(type==="tiktok"){
-    if(user.tiktok) return res.json(user);
-    user.tiktok = true;
-    user.coins += 1000;
+    if(type==="tg" && !user.telegram){
+      user.coins += 500;
+      user.telegram = true;
+    }
+    if(type==="tiktok" && !user.tiktok){
+      user.coins += 1000;
+      user.tiktok = true;
+    }
+    if(type==="yt" && !user.youtube){
+      user.coins += 500;
+      user.youtube = true;
+    }
+
+    await user.save();
+    res.json({user});
+  }catch(e){
+    console.log(e);
+    res.status(500).json({error:"reward error"});
   }
+});
 
-  if(type==="youtube"){
-    if(user.youtube) return res.json(user);
-    user.youtube = true;
-    user.coins += 500;
+// DEPOSIT
+app.post("/deposit", async (req,res)=>{
+  try{
+    let {username, amount} = req.body;
+    let user = await User.findOne({username});
+    if(!user) return res.json({error:"No user"});
+
+    user.deposit += parseFloat(amount);
+    await user.save();
+    res.json({message:`Deposit successful: ${amount} USDT`, user});
+  }catch(e){
+    console.log(e);
+    res.status(500).json({error:"deposit error"});
   }
-
-  await user.save();
-  res.json(user);
-}catch{
-  res.status(500).json({error:"reward error"});
-}
 });
 
 // WITHDRAW
 app.post("/withdraw", async (req,res)=>{
-try{
-  let {username,amount} = req.body;
-  let user = await User.findOne({username});
+  try{
+    let {username, amount, wallet} = req.body;
+    let user = await User.findOne({username});
+    if(!user) return res.json({error:"No user"});
 
-  let need = amount*100;
+    let neededCoins = amount*100;
 
-  if(user.coins < need){
-    return res.json({error:"Not enough coins"});
+    // Withdraw rules
+    if(user.refs < 10 && user.deposit === 0) 
+      return res.json({error:"Need 10 referrals & 20 USDT minimum to withdraw"});
+
+    if(user.deposit>0 && (user.refs<5 || user.level<5))
+      return res.json({error:`Deposit ${user.deposit} USDT: Need 5 Referrals & Level 5`});
+
+    if(user.coins < neededCoins)
+      return res.json({error:"Not enough coins"});
+
+    user.coins -= neededCoins;
+    await user.save();
+
+    res.json({message:`Withdraw success ${amount} USDT to ${wallet}`});
+  }catch(e){
+    console.log(e);
+    res.status(500).json({error:"withdraw error"});
   }
-
-  user.coins -= need;
-  await user.save();
-
-  res.json({message:"Withdraw success"});
-}catch{
-  res.status(500).json({error:"withdraw error"});
-}
 });
 
+// START SERVER
 app.listen(process.env.PORT || 3000, ()=>{
-console.log("Server running");
+  console.log("Server running");
 });
