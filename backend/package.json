@@ -1,7 +1,6 @@
 {
   "name": "crypto-earn-app",
   "version": "1.0.0",
-  "description": "Crypto Tap Earn App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
